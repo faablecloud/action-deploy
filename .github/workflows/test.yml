@@ -14,6 +14,5 @@ jobs:
           faable_app_name: "test-123"
           faable_user: "tailorhub"
           enable_debug: true
-      env:
+        env:
           FAABLE_API_KEY: ${{ secrets.FAABLE_API_KEY }}
-
