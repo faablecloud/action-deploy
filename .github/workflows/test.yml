@@ -10,10 +10,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - run: npm run setup tests/test-1/data.json
-      - uses: faabledata/action-deploy@master
+      - uses: faablecloud/action-deploy@master
         with:
           heroku_api_key: ${{secrets.HEROKU_API_KEY}}
           heroku_app_name: "akhileshns-hd-test-1"
           heroku_email: "nsakhilesh02@gmail.com"
           appdir: "tests/test-1"
-      
