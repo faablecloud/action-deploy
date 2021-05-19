@@ -6,7 +6,7 @@ const path = require("path");
 const core = require("@actions/core");
 const copy_files = () => {
     const templates = path.join(__dirname, "..", "templates");
-    const dst = path.join(process.cwd(), "Dockerfile");
+    const dst = process.cwd();
     fs_extra_1.copySync(`${templates}/Dockerfile.template`, `${dst}/Dockerfile`);
     fs_extra_1.copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
 };

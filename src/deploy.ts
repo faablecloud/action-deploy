@@ -5,7 +5,7 @@ import * as core from "@actions/core";
 
 const copy_files = () => {
   const templates = path.join(__dirname, "..", "templates");
-  const dst = path.join(process.cwd(), "Dockerfile");
+  const dst = process.cwd();
   copySync(`${templates}/Dockerfile.template`, `${dst}/Dockerfile`);
   copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
 };
