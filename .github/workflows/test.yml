@@ -12,6 +12,8 @@ jobs:
       - uses: faablecloud/action-deploy@main
         with:
           faable_app_name: "test-123"
-          faable_api_key: ${{ secrets.FAABLE_API_KEY }}
           faable_user: "tailorhub"
           enable_debug: true
+      env:
+          FAABLE_API_KEY: ${{ secrets.FAABLE_API_KEY }}
+
