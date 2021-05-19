@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "@actions/core": "^1.2.7",
+    "nodemon": "^2.0.7",
+    "typescript": "^4.2.4"
+  },
+  "name": "action-build",
+  "version": "1.0.0",
+  "main": "index.js",
+  "repository": "git@github.com:faablecloud/faable-deploy.git",
+  "author": "Marc Pomar <marc@corecode.school>",
+  "license": "MIT"
+}
