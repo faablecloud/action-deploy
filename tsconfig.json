@@ -1,12 +1,11 @@
 {
   "compilerOptions": {
     "outDir": "dist",
-    "target": "esnext",
+    "target": "ES2020",
     "module": "commonjs",
     "strict": true,
     "moduleResolution": "node",
-    "esModuleInterop": true,
-    "forceConsistentCasingInFileNames": true /* Disallow inconsistently-cased references to the same file. */
+    "forceConsistentCasingInFileNames": true
   },
   "include": ["src/**/*"]
 }

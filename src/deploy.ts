@@ -1,6 +1,6 @@
 import { execSync } from "child_process";
 import { copySync } from "fs-extra";
-import path from "path";
+import * as path from "path";
 import * as core from "@actions/core";
 
 const copy_files = () => {
