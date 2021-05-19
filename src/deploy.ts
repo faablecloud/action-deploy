@@ -13,29 +13,48 @@ const copy_files = () => {
 type FaableContext = {
   faable_app_name: string;
   faable_api_key: string;
+  faable_user: string;
+  enable_debug: boolean;
 };
 
 const get_context = (): FaableContext => {
   return {
-    faable_app_name: core.getInput("faable_app_name"),
-    faable_api_key: core.getInput("faable_api_key"),
+    faable_app_name: core.getInput("faable_app_name", { required: true }),
+    faable_api_key: core.getInput("faable_api_key", { required: true }),
+    faable_user: core.getInput("faable_user", { required: true }),
+    enable_debug: core.getInput("enable_debug") ? true : false,
   };
 };
 
+const run_cmd = (ctx: FaableContext) => (command: string) => {
+  if (ctx.enable_debug) {
+    console.log(`Running: ${command}`);
+    execSync(command, { stdio: "inherit" });
+  } else {
+    execSync(command);
+  }
+};
+
 const main = () => {
-  console.log("Building docker image");
-  copy_files();
-  console.log("Files copied");
   const ctx = get_context();
-  const tag = `registry.faable.com/${ctx.faable_app_name}`;
+  if (ctx.enable_debug) {
+    console.log(ctx);
+  }
+  const cmd = run_cmd(ctx);
+  // Prepare setup
+  console.log("🥤 Building docker image...");
+  copy_files();
 
   // Execute build
-  execSync("ls -als", { stdio: "inherit" });
-  execSync(`docker build -t ${tag} .`, { stdio: "inherit" });
-  execSync(`docker images`, { stdio: "inherit" });
+  const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
+  cmd(`docker build -t ${tag} .`);
+  cmd(
+    `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin`
+  );
+  cmd(`docker push ${tag}`);
 
-  core.setOutput("status", "✅ Successfully deployed to FaableCloud");
-  core.setOutput("status", `✅ https://${ctx.faable_app_name}.app.faable.com`);
+  console.log("✅ Successfully deployed to FaableCloud");
+  console.log(`✅ https://${ctx.faable_app_name}.app.faable.com`);
 };
 
 main();
