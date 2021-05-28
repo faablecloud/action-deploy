@@ -1,7 +1,10 @@
-import { execSync } from "child_process";
 import { copySync } from "fs-extra";
 import * as path from "path";
-import * as core from "@actions/core";
+
+import { FaableContext, get_context } from "./FaableContext";
+import { run_cmd } from "./run_cmd";
+
+import { saveCache, restoreCache } from "@actions/cache";
 
 const copy_files = () => {
   const templates = path.join(__dirname, "..", "templates");
@@ -10,40 +13,34 @@ const copy_files = () => {
   copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
 };
 
-type FaableContext = {
-  faable_app_name: string;
-  faable_api_key: string;
-  faable_user: string;
-  enable_debug: boolean;
-};
-
-const get_context = (): FaableContext => {
-  return {
-    faable_app_name: core.getInput("faable_app_name", { required: true }),
-    faable_api_key: core.getInput("faable_api_key", { required: true }),
-    faable_user: core.getInput("faable_user", { required: true }),
-    enable_debug: core.getInput("enable_debug") ? true : false,
-  };
-};
-
-const run_cmd = (ctx: FaableContext) => (command: string) => {
-  if (ctx.enable_debug) {
-    console.log(`Running: ${command}`);
-    execSync(command, { stdio: "inherit" });
+const setup_dependencies = async (ctx: FaableContext) => {
+  const paths = ["node_modules"];
+  const key = "yarn-last-build";
+  const cacheKey = await restoreCache(paths, key, [key]);
+  if (cacheKey) {
+    console.log(`Restored previous cache`);
   } else {
-    execSync(command);
+    console.log(`no previous cache found`);
   }
+
+  run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
+  const cacheId = await saveCache(paths, key);
+  console.log(`Saved node_modules cache ${cacheId}`);
 };
 
-const main = () => {
+const main = async () => {
   const ctx = get_context();
   if (ctx.enable_debug) {
     console.log(ctx);
   }
   const cmd = run_cmd(ctx);
+
   // Prepare setup
   console.log("🥤 Building docker image...");
   copy_files();
+
+  // Install dependencies
+  await setup_dependencies(ctx);
 
   // Execute build
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;

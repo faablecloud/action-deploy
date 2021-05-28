@@ -23,7 +23,7 @@ ARG NPM_BUILD_COMMAND=build
 COPY ./ /faable/app
 
 # Install dependencies
-RUN yarn install --production=false --frozen-lockfile
+# RUN yarn install --production=false --frozen-lockfile
 
 # Build the project if requested
 RUN echo "Running build command: $NPM_BUILD_COMMAND"

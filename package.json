@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@actions/cache": "^1.0.7",
     "@actions/core": "^1.2.7",
     "@types/fs-extra": "^9.0.11",
     "@types/node": "^15.3.0",
