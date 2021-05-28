@@ -24,5 +24,5 @@ export const setup_dependencies_in_cache = async (ctx: FaableContext) => {
   // Save cached node_modules
 
   const cacheId = await saveCache(paths, key);
-  console.log(`Saved node_modules cache ${cacheId}`);
+  console.log(`Saved node_modules cache id:${cacheId} key:${key}`);
 };

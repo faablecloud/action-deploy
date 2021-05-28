@@ -25,6 +25,6 @@ const setup_dependencies_in_cache = async (ctx) => {
     run_cmd_1.run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
     // Save cached node_modules
     const cacheId = await cache_1.saveCache(paths, key);
-    console.log(`Saved node_modules cache ${cacheId}`);
+    console.log(`Saved node_modules cache id:${cacheId} key:${key}`);
 };
 exports.setup_dependencies_in_cache = setup_dependencies_in_cache;
