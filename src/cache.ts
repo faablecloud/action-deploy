@@ -11,12 +11,13 @@ const file_hash = async (filePath: string) => {
 
 export const setup_dependencies_in_cache = async (ctx: FaableContext) => {
   const paths = ["node_modules"];
-  const key = `faable-build-${file_hash("yarn.lock")}`;
+  const hash = await file_hash("yarn.lock");
+  const key = `faable-build-${hash}`;
   const cacheKey = await restoreCache(paths, key, ["faable-build-"]);
   if (cacheKey) {
-    console.log(`Restored previous cache`);
+    console.log(`Restored previous cache ${cacheKey}`);
   } else {
-    console.log(`no previous cache found`);
+    console.log(`no previous cache found key:${key}`);
   }
 
   run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);

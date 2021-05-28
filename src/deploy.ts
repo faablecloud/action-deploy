@@ -37,4 +37,7 @@ const main = async () => {
   console.log(`✅ https://${ctx.faable_app_name}.app.faable.com`);
 };
 
-main();
+main().catch((e) => {
+  console.log(e);
+  process.exit(-1);
+});
