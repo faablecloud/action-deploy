@@ -1,5 +1,6 @@
 import { copySync } from "fs-extra";
 import * as path from "path";
+import { setup_dependencies_in_cache } from "./cache";
 import { FaableContext, get_context } from "./FaableContext";
 import { run_cmd } from "./run_cmd";
 
@@ -8,24 +9,6 @@ const copy_files = () => {
   const dst = process.cwd();
   copySync(`${templates}/Dockerfile.template`, `${dst}/Dockerfile`);
   copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
-};
-
-const setup_dependencies = async (ctx: FaableContext) => {
-  const paths = ["node_modules"];
-  const restore_key = "faable-build-";
-  const cacheKey = await restoreCache(paths, restore_key, [restore_key]);
-  if (cacheKey) {
-    console.log(`Restored previous cache`);
-  } else {
-    console.log(`no previous cache found`);
-  }
-
-  run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
-
-  // Save cached node_modules
-  const save_key = `faable-build-${uuidv4()}`;
-  const cacheId = await saveCache(paths, save_key);
-  console.log(`Saved node_modules cache ${cacheId}`);
 };
 
 const main = async () => {
@@ -40,7 +23,7 @@ const main = async () => {
   copy_files();
 
   // Install dependencies
-  await setup_dependencies(ctx);
+  await setup_dependencies_in_cache(ctx);
 
   // Execute build
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
