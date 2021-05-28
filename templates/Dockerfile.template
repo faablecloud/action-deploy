@@ -10,14 +10,19 @@ WORKDIR /faable/app
 COPY ./entrypoint.sh ./entrypoint.sh
 RUN chmod +x entrypoint.sh
 
-# Environment variables for runtime
-ENV PORT=80
-ENV NPM_RUN_COMMAND=start
-ENV NODE_ENV=production
 
 # Arguments for building
-ARG NODE_ENV=production
-ARG NPM_BUILD_COMMAND=build
+ARG arg_NPM_BUILD_COMMAND=build
+ARG arg_NPM_RUN_COMMAND=start
+ARG arg_NODE_ENV=production
+
+
+# Environment variables for runtime
+ENV PORT=80
+ENV NPM_BUILD_COMMAND=$arg_NPM_BUILD_COMMAND
+ENV NPM_RUN_COMMAND=$arg_NPM_RUN_COMMAND
+ENV NODE_ENV=$arg_NODE_ENV
+
 
 # Copy Usercode
 COPY ./ /faable/app
