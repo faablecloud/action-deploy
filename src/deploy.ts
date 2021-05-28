@@ -1,10 +1,7 @@
 import { copySync } from "fs-extra";
 import * as path from "path";
-
 import { FaableContext, get_context } from "./FaableContext";
 import { run_cmd } from "./run_cmd";
-
-import { saveCache, restoreCache } from "@actions/cache";
 
 const copy_files = () => {
   const templates = path.join(__dirname, "..", "templates");
@@ -15,8 +12,8 @@ const copy_files = () => {
 
 const setup_dependencies = async (ctx: FaableContext) => {
   const paths = ["node_modules"];
-  const key = "yarn-last-build";
-  const cacheKey = await restoreCache(paths, key, [key]);
+  const restore_key = "faable-build-";
+  const cacheKey = await restoreCache(paths, restore_key, [restore_key]);
   if (cacheKey) {
     console.log(`Restored previous cache`);
   } else {
@@ -24,7 +21,10 @@ const setup_dependencies = async (ctx: FaableContext) => {
   }
 
   run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
-  const cacheId = await saveCache(paths, key);
+
+  // Save cached node_modules
+  const save_key = `faable-build-${uuidv4()}`;
+  const cacheId = await saveCache(paths, save_key);
   console.log(`Saved node_modules cache ${cacheId}`);
 };
 
