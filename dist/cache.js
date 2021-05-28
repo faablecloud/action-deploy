@@ -24,8 +24,14 @@ const setup_dependencies_in_cache = async (ctx) => {
         console.log(`no previous cache found key:${key}`);
     }
     run_cmd_1.run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
-    // Save cached node_modules
-    const cacheId = await cache_1.saveCache(paths, key);
-    console.log(`Saved node_modules cache id:${cacheId} key:${key}`);
+    // Save cached node_modules but ensure there's no cache dupe
+    // https://github.com/actions/toolkit/issues/658
+    try {
+        const cacheId = await cache_1.saveCache(paths, key);
+        console.log(`Saved node_modules cache id:${cacheId} key:${key}`);
+    }
+    catch (error) {
+        console.log(error);
+    }
 };
 exports.setup_dependencies_in_cache = setup_dependencies_in_cache;
