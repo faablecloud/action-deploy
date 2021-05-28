@@ -16,6 +16,12 @@ inputs:
   enable_debug:
     description: "enable build debug"
     required: false
+  npm_build_command:
+    description: "which command to build the package.json (default: build)"
+    required: false
+  npm_start_command:
+    description: "which command to start the deployment (default: start)"
+    required: false
 outputs:
   status:
     description: "The Success/Failure of the action"

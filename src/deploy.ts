@@ -30,7 +30,9 @@ const main = async () => {
   cmd(
     `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`
   );
-  cmd(`docker build -t ${tag} .`);
+  cmd(
+    `docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`
+  );
   cmd(`docker push ${tag}`);
 
   console.log("✅ Successfully deployed to FaableCloud");

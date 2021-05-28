@@ -27,6 +27,8 @@ const get_context = () => {
         faable_api_key: core.getInput("faable_api_key", { required: true }),
         faable_user: core.getInput("faable_user", { required: true }),
         enable_debug: core.getInput("enable_debug") ? true : false,
+        npm_build_command: core.getInput("npm_build_command") || "build",
+        npm_start_command: core.getInput("npm_start_command") || "start",
     };
 };
 exports.get_context = get_context;

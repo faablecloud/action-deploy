@@ -44,7 +44,7 @@ const main = async () => {
     // Execute build
     const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
     cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
-    cmd(`docker build -t ${tag} .`);
+    cmd(`docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`);
     cmd(`docker push ${tag}`);
     console.log("✅ Successfully deployed to FaableCloud");
     console.log(`✅ https://${ctx.faable_app_name}.app.faable.com`);
