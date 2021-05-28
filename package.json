@@ -1,4 +1,10 @@
 {
+  "name": "action-build",
+  "version": "1.0.1",
+  "main": "index.js",
+  "repository": "git@github.com:faablecloud/faable-deploy.git",
+  "author": "Marc Pomar <marc@corecode.school>",
+  "license": "MIT",
   "dependencies": {
     "@actions/cache": "^1.0.7",
     "@actions/core": "^1.2.7",
@@ -9,12 +15,6 @@
     "ts-node": "^9.1.1",
     "typescript": "^4.2.4"
   },
-  "name": "action-build",
-  "version": "1.0.0",
-  "main": "index.js",
-  "repository": "git@github.com:faablecloud/faable-deploy.git",
-  "author": "Marc Pomar <marc@corecode.school>",
-  "license": "MIT",
   "scripts": {
     "deploy": "ts-node src/deploy.ts",
     "build": "tsc -b"
