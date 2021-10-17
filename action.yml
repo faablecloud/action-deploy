@@ -36,3 +36,10 @@ runs:
       shell: bash
     - run: node deploy/index.js
       shell: bash
+      with:
+        faable_app_name: ${{ inputs.faable_app_name }}
+        faable_app_name: ${{ inputs.faable_user }}
+        faable_api_key: ${{ inputs.faable_api_key }}
+        npm_build_command: ${{ inputs.npm_build_command }}
+        npm_start_command: ${{ inputs.npm_start_command }}
+
