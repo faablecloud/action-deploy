@@ -30,15 +30,15 @@ export const deploy_action = async (
   copy_files();
 
   // Install dependencies
-  if (options.cache) {
-    try {
-      await setup_dependencies_in_cache(ctx);
-    } catch (error) {
-      console.log("Cannot setup cache");
-    }
-  } else {
-    console.log("🔁 Skipped github cache");
-  }
+  // if (options.cache) {
+  //   try {
+  //     await setup_dependencies_in_cache(ctx);
+  //   } catch (error) {
+  //     console.log("Cannot setup cache");
+  //   }
+  // } else {
+  //   console.log("🔁 Skipped github cache");
+  // }
 
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
 
@@ -54,10 +54,6 @@ export const deploy_action = async (
     ".",
   ]);
   console.log(`✅ Build ${ctx.faable_app_name} successful`);
-
-  // cmd(
-  //   `docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`
-  // );
 
   if (options.upload) {
     // Registry login
