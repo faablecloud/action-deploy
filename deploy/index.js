@@ -75924,243 +75924,53 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 2667:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+/***/ 2073:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
 
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-const deploy_action_1 = __nccwpck_require__(4584);
-const FaableContext_1 = __nccwpck_require__(6064);
-const package_json_1 = __importDefault(__nccwpck_require__(306));
-const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`🚀 FaableCloud ${package_json_1.default.name} - ${package_json_1.default.version}`);
-    const ctx = (0, FaableContext_1.get_context)();
-    try {
-        (0, deploy_action_1.deploy_action)(ctx);
-    }
-    catch (error) {
-        console.log(error);
-        process.exit(-1);
-    }
+// EXTERNAL MODULE: ./node_modules/fs-extra/lib/index.js
+var lib = __nccwpck_require__(5630);
+var lib_default = /*#__PURE__*/__nccwpck_require__.n(lib);
+// EXTERNAL MODULE: ./node_modules/md5/md5.js
+var md5 = __nccwpck_require__(1711);
+var md5_default = /*#__PURE__*/__nccwpck_require__.n(md5);
+// EXTERNAL MODULE: ./node_modules/@actions/cache/lib/cache.js
+var cache = __nccwpck_require__(7799);
+// EXTERNAL MODULE: external "child_process"
+var external_child_process_ = __nccwpck_require__(3129);
+// EXTERNAL MODULE: ./node_modules/pino/pino.js
+var pino = __nccwpck_require__(9608);
+var pino_default = /*#__PURE__*/__nccwpck_require__.n(pino);
+;// CONCATENATED MODULE: ./src/log.ts
+
+const logger = pino_default()({
+    transport: {
+        target: "pino-pretty",
+        options: {
+            colorize: true,
+        },
+    },
 });
-main();
+
+;// CONCATENATED MODULE: ./src/lib/run_cmd.ts
 
 
-/***/ }),
-
-/***/ 7554:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.setup_dependencies_in_cache = void 0;
-const fs_extra_1 = __importDefault(__nccwpck_require__(5630));
-const md5_1 = __importDefault(__nccwpck_require__(1711));
-const cache_1 = __nccwpck_require__(7799);
-const run_cmd_1 = __nccwpck_require__(4701);
-const log_1 = __nccwpck_require__(5042);
-const log = log_1.logger.child({ name: "cache" });
-const file_hash = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
-    const buf = yield fs_extra_1.default.readFile(filePath);
-    return (0, md5_1.default)(buf);
-});
-const setup_dependencies_in_cache = (ctx) => __awaiter(void 0, void 0, void 0, function* () {
-    const paths = ["node_modules"];
-    const hash = yield file_hash("yarn.lock");
-    const key = `faable-build-${hash}`;
-    const cacheKey = yield (0, cache_1.restoreCache)(paths, key, ["faable-build-"]);
-    if (cacheKey) {
-        log.info(`Restored previous cache ${cacheKey}`);
-    }
-    else {
-        log.warn(`no previous cache found key:${key}`);
-    }
-    (0, run_cmd_1.run_cmd)(ctx)(`yarn install --production=false --frozen-lockfile`);
-    // Save cached node_modules but ensure there's no cache dupe
-    // https://github.com/actions/toolkit/issues/658
-    try {
-        const cacheId = yield (0, cache_1.saveCache)(paths, key);
-        log.info(`Saved node_modules cache id:${cacheId} key:${key}`);
-    }
-    catch (error) {
-        log.error(error);
-    }
-});
-exports.setup_dependencies_in_cache = setup_dependencies_in_cache;
-
-
-/***/ }),
-
-/***/ 4584:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.deploy_action = void 0;
-const fs_extra_1 = __nccwpck_require__(5630);
-const cache_1 = __nccwpck_require__(7554);
-const run_cmd_1 = __nccwpck_require__(4701);
-const log_1 = __nccwpck_require__(5042);
-const log = log_1.logger.child({ name: "deploy" });
-const copy_files = () => {
-    const templates = __nccwpck_require__.ab + "templates";
-    const dst = process.cwd();
-    (0, fs_extra_1.copySync)(__nccwpck_require__.ab + "Dockerfile.template", `${dst}/Dockerfile`);
-    (0, fs_extra_1.copySync)(__nccwpck_require__.ab + "entrypoint.sh", `${dst}/entrypoint.sh`);
-};
-const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter(void 0, void 0, void 0, function* () {
-    if (ctx.enable_debug) {
-        console.log(ctx);
-    }
-    const cmd = (0, run_cmd_1.run_cmd)(ctx);
-    // Prepare setup
-    log.info("🥤 Building docker image...");
-    copy_files();
-    // Install dependencies
-    if (options.cache) {
-        try {
-            yield (0, cache_1.setup_dependencies_in_cache)(ctx);
-        }
-        catch (error) {
-            log.error("Cannot setup cache");
-        }
-    }
-    else {
-        log.info("🔁 Skipped github cache");
-    }
-    const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
-    // Execute build
-    (0, run_cmd_1.spawn_cmd)(ctx)("docker", [
-        "build",
-        `--build-arg`,
-        `arg_NPM_RUN_COMMAND="${ctx.npm_start_command}"`,
-        `--build-arg`,
-        `arg_NPM_BUILD_COMMAND="${ctx.npm_build_command}"`,
-        `-t`,
-        tag,
-        ".",
-    ]);
-    log.info(`✅ Build ${ctx.faable_app_name} successful`);
-    // cmd(
-    //   `docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`
-    // );
-    if (options.upload) {
-        // Registry login
-        cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
-        // Upload the image to faable registry
-        cmd(`docker push ${tag}`);
-        log.info("✅ Successfully deployed to FaableCloud");
-    }
-    else {
-        log.info("🔁 Skipped upload");
-    }
-});
-exports.deploy_action = deploy_action;
-
-
-/***/ }),
-
-/***/ 6064:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.get_context = void 0;
-const core = __importStar(__nccwpck_require__(6432));
-const get_context = () => {
-    return {
-        faable_app_name: core.getInput("faable_app_name", { required: true }),
-        faable_api_key: core.getInput("faable_api_key", { required: true }),
-        faable_user: core.getInput("faable_user", { required: true }),
-        enable_debug: core.getInput("enable_debug") ? true : false,
-        npm_build_command: core.getInput("npm_build_command") || "build",
-        npm_start_command: core.getInput("npm_start_command") || "start",
-    };
-};
-exports.get_context = get_context;
-
-
-/***/ }),
-
-/***/ 4701:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
-
-"use strict";
-
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.spawn_cmd = exports.run_cmd = void 0;
-const child_process_1 = __nccwpck_require__(3129);
-const log_1 = __nccwpck_require__(5042);
-const log = log_1.logger.child({ name: "cmd" });
+const log = logger.child({ name: "cmd" });
 const run_cmd = (ctx) => (command) => {
     if (ctx.enable_debug) {
         console.log(`Running: ${command}`);
-        (0, child_process_1.execSync)(command, { stdio: "inherit" });
+        (0,external_child_process_.execSync)(command, { stdio: "inherit" });
     }
     else {
-        const fs = (0, child_process_1.execSync)(command);
+        const fs = (0,external_child_process_.execSync)(command);
     }
 };
-exports.run_cmd = run_cmd;
 const spawn_cmd = (ctx) => (cmd, args) => {
     try {
-        const process = (0, child_process_1.spawnSync)(cmd, args, {
+        const process = (0,external_child_process_.spawnSync)(cmd, args, {
             stdio: "inherit",
         });
         if (process.status != 0) {
@@ -76175,30 +75985,161 @@ const spawn_cmd = (ctx) => (cmd, args) => {
         throw new Error(`Error running command ${cmd} with ${params}`);
     }
 };
-exports.spawn_cmd = spawn_cmd;
 
-
-/***/ }),
-
-/***/ 5042:
-/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
-
-"use strict";
-
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
+;// CONCATENATED MODULE: ./src/deploy/cache.ts
+var __awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
 };
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.logger = void 0;
-const pino_1 = __importDefault(__nccwpck_require__(9608));
-exports.logger = (0, pino_1.default)({
-    transport: {
-        target: "pino-pretty",
-        options: {
-            colorize: true,
-        },
-    },
+
+
+
+
+
+const cache_log = logger.child({ name: "cache" });
+const file_hash = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    const buf = yield lib_default().readFile(filePath);
+    return md5_default()(buf);
 });
+const setup_dependencies_in_cache = (ctx) => __awaiter(void 0, void 0, void 0, function* () {
+    const paths = ["node_modules"];
+    const hash = yield file_hash("yarn.lock");
+    const key = `faable-build-${hash}`;
+    const cacheKey = yield (0,cache.restoreCache)(paths, key, ["faable-build-"]);
+    if (cacheKey) {
+        cache_log.info(`Restored previous cache ${cacheKey}`);
+    }
+    else {
+        cache_log.warn(`no previous cache found key:${key}`);
+    }
+    run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
+    // Save cached node_modules but ensure there's no cache dupe
+    // https://github.com/actions/toolkit/issues/658
+    try {
+        const cacheId = yield (0,cache.saveCache)(paths, key);
+        cache_log.info(`Saved node_modules cache id:${cacheId} key:${key}`);
+    }
+    catch (error) {
+        cache_log.error(error);
+    }
+});
+
+;// CONCATENATED MODULE: ./src/deploy/deploy_action.ts
+var deploy_action_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+
+const deploy_action_log = logger.child({ name: "deploy" });
+const copy_files = () => {
+    const templates = __nccwpck_require__.ab + "templates";
+    const dst = process.cwd();
+    (0,lib.copySync)(__nccwpck_require__.ab + "Dockerfile.template", `${dst}/Dockerfile`);
+    (0,lib.copySync)(__nccwpck_require__.ab + "entrypoint.sh", `${dst}/entrypoint.sh`);
+};
+const deploy_action = (ctx, options = { upload: true, cache: true }) => deploy_action_awaiter(void 0, void 0, void 0, function* () {
+    if (ctx.enable_debug) {
+        console.log(ctx);
+    }
+    const cmd = run_cmd(ctx);
+    // Prepare setup
+    deploy_action_log.info("🥤 Building docker image...");
+    copy_files();
+    // Install dependencies
+    if (options.cache) {
+        try {
+            yield setup_dependencies_in_cache(ctx);
+        }
+        catch (error) {
+            deploy_action_log.error("Cannot setup cache");
+        }
+    }
+    else {
+        deploy_action_log.info("🔁 Skipped github cache");
+    }
+    const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
+    // Execute build
+    spawn_cmd(ctx)("docker", [
+        "build",
+        `--build-arg`,
+        `arg_NPM_RUN_COMMAND="${ctx.npm_start_command}"`,
+        `--build-arg`,
+        `arg_NPM_BUILD_COMMAND="${ctx.npm_build_command}"`,
+        `-t`,
+        tag,
+        ".",
+    ]);
+    deploy_action_log.info(`✅ Build ${ctx.faable_app_name} successful`);
+    // cmd(
+    //   `docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`
+    // );
+    if (options.upload) {
+        // Registry login
+        cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
+        // Upload the image to faable registry
+        cmd(`docker push ${tag}`);
+        deploy_action_log.info("✅ Successfully deployed to FaableCloud");
+    }
+    else {
+        deploy_action_log.info("🔁 Skipped upload");
+    }
+});
+
+// EXTERNAL MODULE: ./node_modules/@actions/core/lib/core.js
+var core = __nccwpck_require__(6432);
+;// CONCATENATED MODULE: ./src/lib/FaableContext.ts
+
+const get_context = () => {
+    return {
+        faable_app_name: core.getInput("faable_app_name", { required: true }),
+        faable_api_key: core.getInput("faable_api_key", { required: true }),
+        faable_user: core.getInput("faable_user", { required: true }),
+        enable_debug: core.getInput("enable_debug") ? true : false,
+        npm_build_command: core.getInput("npm_build_command") || "build",
+        npm_start_command: core.getInput("npm_start_command") || "start",
+    };
+};
+
+;// CONCATENATED MODULE: ./package.json
+const package_namespaceObject = JSON.parse('{"u2":"@faablecloud/action-deploy","i8":"0.0.0-dev"}');
+;// CONCATENATED MODULE: ./src/index.ts
+var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+
+
+
+const main = () => src_awaiter(void 0, void 0, void 0, function* () {
+    console.log(`🚀 FaableCloud ${package_namespaceObject.u2} - ${package_namespaceObject.i8}`);
+    const ctx = get_context();
+    try {
+        deploy_action(ctx);
+    }
+    catch (error) {
+        console.log(error);
+        process.exit(-1);
+    }
+});
+main();
 
 
 /***/ }),
@@ -76514,14 +76455,6 @@ module.exports = JSON.parse('["ac","com.ac","edu.ac","gov.ac","net.ac","mil.ac",
 
 /***/ }),
 
-/***/ 306:
-/***/ ((module) => {
-
-"use strict";
-module.exports = JSON.parse('{"name":"@faablecloud/action-deploy","version":"0.0.0-dev","main":"deploy/index.js","repository":"git@github.com:faablecloud/action-deploy.git","author":"Marc Pomar <marc@corecode.school>","license":"MIT","dependencies":{"@actions/cache":"^1.0.7","@actions/core":"^1.2.7","@types/fs-extra":"^9.0.11","@types/md5":"^2.3.0","@types/node":"^15.3.0","@vercel/ncc":"^0.31.1","fs-extra":"^10.0.0","md5":"^2.3.0","nodemon":"^2.0.7","pino":"^7.0.2","pino-pretty":"^7.1.0","ts-loader":"^9.2.6","ts-node":"^9.1.1","typescript":"^4.4.4","uuid":"^8.3.2"},"devDependencies":{"ava":"^3.15.0","semantic-release":"^18.0.0","webpack":"^5.58.2","webpack-cli":"^4.9.0"},"scripts":{"deploy":"ts-node src/cmd/deploy.ts","build":"ncc build src/cmd/deploy.ts -o deploy","release":"yarn build && semantic-release","test":"ava -v"},"ava":{"extensions":["ts"],"require":["ts-node/register"]},"release":{"branches":"main","plugins":["@semantic-release/commit-analyzer","@semantic-release/release-notes-generator","@semantic-release/github"]}}');
-
-/***/ }),
-
 /***/ 2357:
 /***/ ((module) => {
 
@@ -76747,6 +76680,46 @@ module.exports = require("zlib");
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	(() => {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__nccwpck_require__.n = (module) => {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				() => (module['default']) :
+/******/ 				() => (module);
+/******/ 			__nccwpck_require__.d(getter, { a: getter });
+/******/ 			return getter;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getters */
+/******/ 	(() => {
+/******/ 		// define getter functions for harmony exports
+/******/ 		__nccwpck_require__.d = (exports, definition) => {
+/******/ 			for(var key in definition) {
+/******/ 				if(__nccwpck_require__.o(definition, key) && !__nccwpck_require__.o(exports, key)) {
+/******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
+/******/ 				}
+/******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/hasOwnProperty shorthand */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.o = (obj, prop) => (Object.prototype.hasOwnProperty.call(obj, prop))
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -76755,8 +76728,8 @@ module.exports = require("zlib");
 /******/ 	
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	// This entry module is referenced by other modules so it can't be inlined
-/******/ 	var __webpack_exports__ = __nccwpck_require__(2667);
+/******/ 	// This entry module doesn't tell about it's top-level declarations so it can't be inlined
+/******/ 	var __webpack_exports__ = __nccwpck_require__(2073);
 /******/ 	module.exports = __webpack_exports__;
 /******/ 	
 /******/ })()

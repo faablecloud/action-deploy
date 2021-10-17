@@ -30,7 +30,7 @@
   },
   "scripts": {
     "deploy": "ts-node src/cmd/deploy.ts",
-    "build": "ncc build src/cmd/deploy.ts -o deploy",
+    "build": "ncc build src/index.ts -o deploy",
     "release": "yarn build && semantic-release",
     "test": "ava -v"
   },
