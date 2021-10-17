@@ -75929,6 +75929,15 @@ function wrappy (fn, cb) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -75936,7 +75945,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 const deploy_action_1 = __nccwpck_require__(4584);
 const FaableContext_1 = __nccwpck_require__(6064);
 const package_json_1 = __importDefault(__nccwpck_require__(306));
-const main = async () => {
+const main = () => __awaiter(void 0, void 0, void 0, function* () {
     console.log(`🚀 FaableCloud ${package_json_1.default.name} - ${package_json_1.default.version}`);
     const ctx = (0, FaableContext_1.get_context)();
     try {
@@ -75946,7 +75955,7 @@ const main = async () => {
         console.log(error);
         process.exit(-1);
     }
-};
+});
 main();
 
 
@@ -75957,6 +75966,15 @@ main();
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
@@ -75968,15 +75986,15 @@ const cache_1 = __nccwpck_require__(7799);
 const run_cmd_1 = __nccwpck_require__(4701);
 const log_1 = __nccwpck_require__(5042);
 const log = log_1.logger.child({ name: "cache" });
-const file_hash = async (filePath) => {
-    const buf = await fs_extra_1.default.readFile(filePath);
+const file_hash = (filePath) => __awaiter(void 0, void 0, void 0, function* () {
+    const buf = yield fs_extra_1.default.readFile(filePath);
     return (0, md5_1.default)(buf);
-};
-const setup_dependencies_in_cache = async (ctx) => {
+});
+const setup_dependencies_in_cache = (ctx) => __awaiter(void 0, void 0, void 0, function* () {
     const paths = ["node_modules"];
-    const hash = await file_hash("yarn.lock");
+    const hash = yield file_hash("yarn.lock");
     const key = `faable-build-${hash}`;
-    const cacheKey = await (0, cache_1.restoreCache)(paths, key, ["faable-build-"]);
+    const cacheKey = yield (0, cache_1.restoreCache)(paths, key, ["faable-build-"]);
     if (cacheKey) {
         log.info(`Restored previous cache ${cacheKey}`);
     }
@@ -75987,23 +76005,32 @@ const setup_dependencies_in_cache = async (ctx) => {
     // Save cached node_modules but ensure there's no cache dupe
     // https://github.com/actions/toolkit/issues/658
     try {
-        const cacheId = await (0, cache_1.saveCache)(paths, key);
+        const cacheId = yield (0, cache_1.saveCache)(paths, key);
         log.info(`Saved node_modules cache id:${cacheId} key:${key}`);
     }
     catch (error) {
         log.error(error);
     }
-};
+});
 exports.setup_dependencies_in_cache = setup_dependencies_in_cache;
 
 
 /***/ }),
 
 /***/ 4584:
-/***/ ((__unused_webpack_module, exports, __nccwpck_require__) => {
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
 
 "use strict";
 
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.deploy_action = void 0;
 const fs_extra_1 = __nccwpck_require__(5630);
@@ -76017,7 +76044,7 @@ const copy_files = () => {
     (0, fs_extra_1.copySync)(__nccwpck_require__.ab + "Dockerfile.template", `${dst}/Dockerfile`);
     (0, fs_extra_1.copySync)(__nccwpck_require__.ab + "entrypoint.sh", `${dst}/entrypoint.sh`);
 };
-const deploy_action = async (ctx, options = { upload: true, cache: true }) => {
+const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter(void 0, void 0, void 0, function* () {
     if (ctx.enable_debug) {
         console.log(ctx);
     }
@@ -76028,7 +76055,7 @@ const deploy_action = async (ctx, options = { upload: true, cache: true }) => {
     // Install dependencies
     if (options.cache) {
         try {
-            await (0, cache_1.setup_dependencies_in_cache)(ctx);
+            yield (0, cache_1.setup_dependencies_in_cache)(ctx);
         }
         catch (error) {
             log.error("Cannot setup cache");
@@ -76063,7 +76090,7 @@ const deploy_action = async (ctx, options = { upload: true, cache: true }) => {
     else {
         log.info("🔁 Skipped upload");
     }
-};
+});
 exports.deploy_action = deploy_action;
 
 
