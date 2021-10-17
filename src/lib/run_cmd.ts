@@ -9,7 +9,7 @@ export const run_cmd = (ctx: FaableContext) => (command: string) => {
     console.log(`Running: ${command}`);
     execSync(command, { stdio: "inherit" });
   } else {
-    const fs = execSync(command);
+    execSync(command);
   }
 };
 

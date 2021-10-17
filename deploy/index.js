@@ -75965,7 +75965,7 @@ const run_cmd = (ctx) => (command) => {
         (0,external_child_process_.execSync)(command, { stdio: "inherit" });
     }
     else {
-        const fs = (0,external_child_process_.execSync)(command);
+        (0,external_child_process_.execSync)(command);
     }
 };
 const spawn_cmd = (ctx) => (cmd, args) => {
