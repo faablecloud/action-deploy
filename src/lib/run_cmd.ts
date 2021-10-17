@@ -26,6 +26,7 @@ export const spawn_cmd =
       }
     } catch (error) {
       console.log(error);
-      throw new Error(`Error running command ${cmd} with ${args?.join(" ")}`);
+      const params = args ? args.join(" ") : "";
+      throw new Error(`Error running command ${cmd} with ${params}`);
     }
   };
