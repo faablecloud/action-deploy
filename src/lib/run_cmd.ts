@@ -1,8 +1,5 @@
 import { execSync, spawnSync } from "child_process";
-import { logger } from "../log";
 import { FaableContext } from "./FaableContext";
-
-const log = logger.child({ name: "cmd" });
 
 export const run_cmd = (ctx: FaableContext) => (command: string) => {
   if (ctx.enable_debug) {
@@ -21,7 +18,7 @@ export const spawn_cmd =
       });
       if (process.status != 0) {
         const out = process.output.toString();
-        log.info(out);
+        console.log(out);
         throw new Error(`Bad Exit ${process.status}`);
       }
     } catch (error) {

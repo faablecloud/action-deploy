@@ -3,9 +3,6 @@ import * as path from "path";
 import { setup_dependencies_in_cache } from "./cache";
 import { FaableContext, get_context } from "../lib/FaableContext";
 import { run_cmd, spawn_cmd } from "../lib/run_cmd";
-import { logger } from "../log";
-
-const log = logger.child({ name: "deploy" });
 
 const copy_files = () => {
   const templates = __dirname + "/templates";
@@ -29,7 +26,7 @@ export const deploy_action = async (
   const cmd = run_cmd(ctx);
 
   // Prepare setup
-  log.info("🥤 Building docker image...");
+  console.log("🥤 Building docker image...");
   copy_files();
 
   // Install dependencies
@@ -37,10 +34,10 @@ export const deploy_action = async (
     try {
       await setup_dependencies_in_cache(ctx);
     } catch (error) {
-      log.error("Cannot setup cache");
+      console.log("Cannot setup cache");
     }
   } else {
-    log.info("🔁 Skipped github cache");
+    console.log("🔁 Skipped github cache");
   }
 
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
@@ -56,7 +53,7 @@ export const deploy_action = async (
     tag,
     ".",
   ]);
-  log.info(`✅ Build ${ctx.faable_app_name} successful`);
+  console.log(`✅ Build ${ctx.faable_app_name} successful`);
 
   // cmd(
   //   `docker build --build-arg arg_NPM_RUN_COMMAND=${ctx.npm_start_command} --build-arg arg_NPM_BUILD_COMMAND=${ctx.npm_build_command} -t ${tag} .`
@@ -70,8 +67,8 @@ export const deploy_action = async (
     // Upload the image to faable registry
     cmd(`docker push ${tag}`);
 
-    log.info("✅ Successfully deployed to FaableCloud");
+    console.log("✅ Successfully deployed to FaableCloud");
   } else {
-    log.info("🔁 Skipped upload");
+    console.log("🔁 Skipped upload");
   }
 };

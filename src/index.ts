@@ -1,6 +1,5 @@
 import { deploy_action } from "./deploy/deploy_action";
 import { get_context } from "./lib/FaableContext";
-import { logger } from "./log";
 import pkg from "../package.json";
 
 const main = () => {
