@@ -27,4 +27,4 @@ outputs:
     description: "The Success/Failure of the action"
 runs:
   using: "node12"
-  main: "dist/deploy.js"
+  main: "dist/cmd/deploy.js"

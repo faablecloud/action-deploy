@@ -11,15 +11,35 @@
     "@types/fs-extra": "^9.0.11",
     "@types/md5": "^2.3.0",
     "@types/node": "^15.3.0",
+    "@vercel/ncc": "^0.31.1",
     "fs-extra": "^10.0.0",
     "md5": "^2.3.0",
     "nodemon": "^2.0.7",
+    "pino": "^7.0.2",
+    "pino-pretty": "^7.1.0",
+    "ts-loader": "^9.2.6",
     "ts-node": "^9.1.1",
-    "typescript": "^4.2.4",
+    "typescript": "^4.4.4",
     "uuid": "^8.3.2"
+  },
+  "devDependencies": {
+    "ava": "^3.15.0",
+    "webpack": "^5.58.2",
+    "webpack-cli": "^4.9.0"
   },
   "scripts": {
     "deploy": "ts-node src/deploy.ts",
-    "build": "tsc -b"
+    "build": "yarn run bundle && yarn run release",
+    "bundle": "webpack",
+    "release": "ncc build dist/deploy.js -o deploy",
+    "test": "ava -v"
+  },
+  "ava": {
+    "extensions": [
+      "ts"
+    ],
+    "require": [
+      "ts-node/register"
+    ]
   }
 }
