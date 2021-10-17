@@ -8,7 +8,7 @@ import { logger } from "../log";
 const log = logger.child({ name: "deploy" });
 
 const copy_files = () => {
-  const templates = path.join(__dirname, "..", "..", "templates");
+  const templates = __dirname + "/templates";
   const dst = process.cwd();
   copySync(`${templates}/Dockerfile.template`, `${dst}/Dockerfile`);
   copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);

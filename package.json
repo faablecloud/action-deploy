@@ -1,6 +1,6 @@
 {
   "name": "action-build",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "main": "index.js",
   "repository": "git@github.com:faablecloud/faable-deploy.git",
   "author": "Marc Pomar <marc@corecode.school>",
@@ -28,10 +28,9 @@
     "webpack-cli": "^4.9.0"
   },
   "scripts": {
-    "deploy": "ts-node src/deploy.ts",
-    "build": "yarn run bundle && yarn run release",
-    "bundle": "webpack",
-    "release": "ncc build dist/deploy.js -o deploy",
+    "deploy": "ts-node src/cmd/deploy.ts",
+    "build": "ncc build src/cmd/deploy.ts -o deploy",
+    "release": "yarn build && semantic-release",
     "test": "ava -v"
   },
   "ava": {
@@ -41,5 +40,16 @@
     "require": [
       "ts-node/register"
     ]
+  },
+  "release": {
+    "branches": "main",
+    "plugins": [
+      "@semantic-release/commit-analyzer",
+      "@semantic-release/release-notes-generator",
+      "@semantic-release/github"
+    ]
+  },
+  "engines": {
+    "node": ">=12.0.0"
   }
 }
