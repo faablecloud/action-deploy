@@ -65460,9 +65460,11 @@ const deploy_action = (ctx, options = { upload: true, cache: true }) => deploy_a
     spawn_cmd(ctx)("docker", [
         "build",
         `--build-arg`,
-        `arg_NPM_RUN_COMMAND="${ctx.npm_start_command}"`,
+        "arg_NPM_RUN_COMMAND",
+        ctx.npm_start_command,
         `--build-arg`,
-        `arg_NPM_BUILD_COMMAND="${ctx.npm_build_command}"`,
+        `arg_NPM_BUILD_COMMAND`,
+        ctx.npm_build_command,
         `-t`,
         tag,
         ".",
@@ -65501,20 +65503,29 @@ const get_context = () => {
 ;// CONCATENATED MODULE: ./package.json
 const package_namespaceObject = JSON.parse('{"u2":"@faablecloud/action-deploy","i8":"0.0.0-dev"}');
 ;// CONCATENATED MODULE: ./src/index.ts
+var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 
 
 
-const main = () => {
+const main = () => src_awaiter(void 0, void 0, void 0, function* () {
     console.log(`🚀 FaableCloud ${package_namespaceObject.u2} - ${package_namespaceObject.i8}`);
     const ctx = get_context();
     try {
-        deploy_action(ctx);
+        yield deploy_action(ctx);
     }
     catch (error) {
         console.log(error);
         process.exit(-1);
     }
-};
+});
 main();
 
 
