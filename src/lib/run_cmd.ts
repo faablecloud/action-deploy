@@ -15,6 +15,7 @@ export const spawn_cmd =
     try {
       const process = spawnSync(cmd, args, {
         stdio: "inherit",
+        shell: true,
       });
       if (process.status != 0) {
         const out = process.output.toString();

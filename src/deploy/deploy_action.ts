@@ -46,11 +46,9 @@ export const deploy_action = async (
   spawn_cmd(ctx)("docker", [
     "build",
     `--build-arg`,
-    "arg_NPM_RUN_COMMAND",
-    ctx.npm_start_command,
+    `arg_NPM_RUN_COMMAND=${ctx.npm_start_command}`,
     `--build-arg`,
-    `arg_NPM_BUILD_COMMAND`,
-    ctx.npm_build_command,
+    `arg_NPM_BUILD_COMMAND=${ctx.npm_build_command}`,
     `-t`,
     tag,
     ".",
