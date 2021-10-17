@@ -3550,7 +3550,7 @@ const get_context = () => {
 };
 
 ;// CONCATENATED MODULE: ./package.json
-const package_namespaceObject = JSON.parse('{"u2":"@faablecloud/action-deploy","i8":"0.0.0-dev"}');
+const package_namespaceObject = JSON.parse('{"u2":"@faablecloud/action-deploy","i8":"0.0.0-develop"}');
 ;// CONCATENATED MODULE: ./src/index.ts
 var src_awaiter = (undefined && undefined.__awaiter) || function (thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
