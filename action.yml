@@ -33,5 +33,6 @@ runs:
       with:
         node-version: "14"
     - run: yarn install --frozen-lockfile
+      shell: bash
     - run: node deploy/index.js
       shell: bash
