@@ -25,5 +25,5 @@ jobs:
       - uses: ./
         with:
           faable_app_name: "test"
-          faable_api_key: ${{ secrets.FAABLE_API_KEY }}
+          faable_api_key: 1234
           faable_user: "faable"
