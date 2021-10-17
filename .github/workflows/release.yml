@@ -16,3 +16,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
           NPM_TOKEN: ${{ secrets.GH_TOKEN }}
+      - uses: ./
+        with:
+          faable_app_name: "test"
+          faable_api_key: ${{ secrets.FAABLE_API_KEY }}
+          faable_user: "faable"
