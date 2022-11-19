@@ -1,20 +1,14 @@
-import { execSync, spawnSync } from "child_process";
+import { spawnSync } from "child_process";
 import { FaableContext } from "./FaableContext";
 
-export const run_cmd = (ctx: FaableContext) => (command: string) => {
-  if (ctx.enable_debug) {
-    console.log(`Running: ${command}`);
-    execSync(command, { stdio: "inherit" });
-  } else {
-    execSync(command);
-  }
-};
-
-export const spawn_cmd =
+export const get_cmd =
   (ctx: FaableContext) => (cmd: string, args?: string[]) => {
     try {
+      if (ctx.enable_debug) {
+        console.log(`Running: ${cmd}`);
+      }
       const process = spawnSync(cmd, args, {
-        stdio: "inherit",
+        stdio: ctx.enable_debug ? "inherit" : "ignore",
         shell: true,
       });
       if (process.status != 0) {

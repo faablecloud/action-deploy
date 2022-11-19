@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import md5 from "md5";
 import { saveCache, restoreCache } from "@actions/cache";
 import { FaableContext } from "../lib/FaableContext";
-import { run_cmd } from "../lib/run_cmd";
+import { get_cmd } from "../lib/run_cmd";
 
 const file_hash = async (filePath: string) => {
   const buf = await fs.readFile(filePath);
@@ -20,7 +20,7 @@ export const setup_dependencies_in_cache = async (ctx: FaableContext) => {
     console.log(`no previous cache found key:${key}`);
   }
 
-  run_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
+  get_cmd(ctx)(`yarn install --production=false --frozen-lockfile`);
 
   // Save cached node_modules but ensure there's no cache dupe
   // https://github.com/actions/toolkit/issues/658

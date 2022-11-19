@@ -1,9 +1,12 @@
 #! /bin/sh
-echo "Powered by FaableCloud, starting...."
-echo "Running npm command -> $NPM_RUN_COMMAND"
+
+NPM_RUN_COMMAND=$1
+
 NODE_VERSION=$(node --version)
 NPM_VERSION=$(npm --version)
 YARN_VERSION=$(yarn --version)
-echo "Node:$NODE_VERSION NPM:$NPM_VERSION Yarn:$YARN_VERSION"
+echo "FaableCloud · Node:$NODE_VERSION NPM:$NPM_VERSION Yarn:$YARN_VERSION"
+echo "Running npm script -> $NPM_RUN_COMMAND"
+
 
 yarn run $NPM_RUN_COMMAND
