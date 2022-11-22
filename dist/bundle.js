@@ -9,6 +9,25 @@ var require$$1 = require('path');
 var child_process = require('child_process');
 var require$$0$3 = require('os');
 
+function _interopNamespaceDefault(e) {
+    var n = Object.create(null);
+    if (e) {
+        Object.keys(e).forEach(function (k) {
+            if (k !== 'default') {
+                var d = Object.getOwnPropertyDescriptor(e, k);
+                Object.defineProperty(n, k, d.get ? d : {
+                    enumerable: true,
+                    get: function () { return e[k]; }
+                });
+            }
+        });
+    }
+    n.default = e;
+    return Object.freeze(n);
+}
+
+var require$$1__namespace = /*#__PURE__*/_interopNamespaceDefault(require$$1);
+
 /*! *****************************************************************************
 Copyright (c) Microsoft Corporation.
 
@@ -2765,10 +2784,19 @@ var lib = {
   ...remove_1
 };
 
+const core$1 = require("@actions/core");
+const log = {
+    error: core$1.error,
+    info: core$1.info,
+    notice: core$1.notice,
+    warning: core$1.warning,
+    debug: core$1.debug,
+};
+
 const get_cmd = (ctx) => (cmd, args) => {
     try {
         if (ctx.enable_debug) {
-            console.log(`Running: ${cmd}`);
+            log.debug(`Running: ${cmd}`);
         }
         const process = child_process.spawnSync(cmd, args, {
             stdio: ctx.enable_debug ? "inherit" : "ignore",
@@ -2776,12 +2804,12 @@ const get_cmd = (ctx) => (cmd, args) => {
         });
         if (process.status != 0) {
             const out = process.output.toString();
-            console.log(out);
+            console.debug(out);
             throw new Error(`Bad Exit ${process.status}`);
         }
     }
     catch (error) {
-        console.log(error);
+        log.error(error);
         const params = args ? args.join(" ") : "";
         throw new Error(`Error running command ${cmd} with ${params}`);
     }
@@ -2795,25 +2823,25 @@ const copy_files = () => {
 };
 const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter(void 0, void 0, void 0, function* () {
     if (ctx.enable_debug) {
-        console.log(ctx);
+        log.debug(ctx);
     }
     const cmd = get_cmd(ctx);
     // Prepare setup
-    console.log("🥤 Building docker image...");
+    log.info("🥤 Building image...");
     copy_files();
     const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
     // Execute build
     cmd("docker", ["build", `-t`, tag, "."]);
-    console.log(`✅ Build ${ctx.faable_app_name} successful`);
+    log.info(`✅ Build ${ctx.faable_app_name} successful`);
     if (options.upload) {
         // Registry login
         cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
         // Upload the image to faable registry
         cmd(`docker push ${tag}`);
-        console.log("✅ Successfully deployed to FaableCloud");
+        log.info("✅ Successfully deployed to FaableCloud");
     }
     else {
-        console.log("🔁 Skipped upload");
+        log.warning("🔁 Skipped upload");
     }
 });
 
@@ -3201,80 +3229,15 @@ const get_context = () => {
     };
 };
 
-var name = "@faablecloud/action-deploy";
-var version = "0.0.0-develop";
-var main$1 = "deploy/index.js";
-var repository = "git@github.com:faablecloud/action-deploy.git";
-var author = "Marc Pomar <marc@faable.com>";
-var license = "MIT";
-var dependencies = {
-	"@actions/cache": "^1.0.7",
-	"@actions/core": "^1.2.7",
-	"@rollup/plugin-commonjs": "^23.0.2",
-	"@rollup/plugin-node-resolve": "^15.0.1",
-	"fs-extra": "^10.0.0",
-	handlebars: "^4.7.7",
-	md5: "^2.3.0",
-	rollup: "^3.3.0",
-	uuid: "^8.3.2"
-};
-var devDependencies = {
-	"@rollup/plugin-json": "^5.0.1",
-	"@rollup/plugin-typescript": "^9.0.2",
-	"@types/fs-extra": "^9.0.11",
-	"@types/md5": "^2.3.0",
-	"@types/node": "^15.3.0",
-	ava: "^3.15.0",
-	nodemon: "^2.0.7",
-	"semantic-release": "^18.0.0",
-	"ts-loader": "^9.2.6",
-	"ts-node": "^9.1.1",
-	typescript: "^4.9.3"
-};
-var scripts = {
-	deploy: "ts-node src/cmd/deploy.ts",
-	build: "rollup --config rollup.config.mjs",
-	release: "yarn build && semantic-release",
-	test: "ava -v"
-};
-var ava = {
-	extensions: [
-		"ts"
-	],
-	require: [
-		"ts-node/register"
-	]
-};
-var release = {
-	branches: "main",
-	plugins: [
-		"@semantic-release/commit-analyzer",
-		"@semantic-release/release-notes-generator",
-		"@semantic-release/github"
-	]
-};
-var pkg = {
-	name: name,
-	version: version,
-	main: main$1,
-	repository: repository,
-	author: author,
-	license: license,
-	dependencies: dependencies,
-	devDependencies: devDependencies,
-	scripts: scripts,
-	ava: ava,
-	release: release
-};
-
+const pkg = require(require$$1__namespace.join(__dirname, "../package.json"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
-    console.log(`🚀 FaableCloud ${pkg.name} - ${pkg.version}`);
+    log.info(`🚀 faable.com ${pkg.name} - ${pkg.version}`);
     const ctx = get_context();
     try {
         yield deploy_action(ctx);
     }
     catch (error) {
-        console.log(error);
+        log.error(error);
         process.exit(-1);
     }
 });
