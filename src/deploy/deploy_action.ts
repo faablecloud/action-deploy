@@ -29,11 +29,11 @@ export const deploy_action = async (
 
   if (options.upload) {
     // Registry login
-    await cmd(
-      `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`
-    );
+    await cmd("bash", [
+      `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`,
+    ]);
     // Upload the image to faable registry
-    await cmd(`docker push ${tag}`);
+    await cmd("docker", ["push", tag]);
 
     log.info("✅ Deployed to FaableCloud");
   } else {
