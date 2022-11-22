@@ -7,7 +7,7 @@ const pkg = require(path.join(__dirname, "../package.json"));
 
 const main = async () => {
   log.info(`🚀 faable.com ${pkg.name} - ${pkg.version}`);
-  console.log(process.env);
+
   const ctx = get_context();
   try {
     await deploy_action(ctx);
