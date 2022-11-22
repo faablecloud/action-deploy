@@ -15,7 +15,7 @@ const default_build: DockerTemplate = {
   start_script: "start",
 };
 
-const templates_dir = path.join(__dirname, "../../templates");
+const templates_dir = path.join(__dirname, "../templates");
 const dockerfile = fs
   .readFileSync(`${templates_dir}/Dockerfile.hbs`)
   .toString();

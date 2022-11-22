@@ -2,7 +2,7 @@ import fs from "fs-extra";
 import { FaableContext, get_context } from "../lib/FaableContext";
 import { get_cmd } from "../lib/run_cmd";
 import { log } from "../log";
-import { prepare_dockerfile } from "./prepare_dockerfile";
+import { prepare_dockerfile } from "../prepare_dockerfile";
 
 const copy_files = () => {
   const templates = __dirname + "/templates";

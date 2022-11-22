@@ -9,7 +9,7 @@ export default {
     dir: "dist",
     format: "cjs",
     exports: "named",
-    preserveModules: true,
+    preserveModules: false,
     preserveModulesRoot: "src",
   },
   plugins: [json(), typescript(), commonjs(), nodeResolve()],
