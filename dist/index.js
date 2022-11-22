@@ -11374,15 +11374,16 @@ const templates_dir = require$$1__namespace.join(__dirname, "../templates");
 const dockerfile = lib$1.readFileSync(`${templates_dir}/Dockerfile.hbs`)
     .toString();
 const docker_template = lib.compile(dockerfile);
+const WORKSPACE_DIR = process.env.GITHUB_WORKSPACE;
 const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, void 0, function* () {
     // Compose template with data and write to path
     const composed_file_data = docker_template(data);
     // Create Dockerfile
-    let out = require$$1__namespace.join(process.cwd(), "./Dockerfile");
+    let out = require$$1__namespace.join(WORKSPACE_DIR, "Dockerfile");
     yield lib$1.writeFile(out, composed_file_data);
     log$2.info(`Created ${out}`);
     // Copy entrypoint file
-    let out2 = require$$1__namespace.join(process.cwd(), "./entrypoint.sh");
+    let out2 = require$$1__namespace.join(WORKSPACE_DIR, "entrypoint.sh");
     yield lib$1.copyFile(require$$1__namespace.join(templates_dir, "entrypoint.sh"), out2);
     log$2.info(`Created ${out2}`);
     return;

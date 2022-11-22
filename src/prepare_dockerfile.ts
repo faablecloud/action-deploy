@@ -22,6 +22,8 @@ const dockerfile = fs
   .toString();
 const docker_template = Handlebars.compile(dockerfile);
 
+const WORKSPACE_DIR = process.env.GITHUB_WORKSPACE as string;
+
 export const prepare_dockerfile = async (
   data: DockerTemplate = default_build
 ) => {
@@ -29,12 +31,12 @@ export const prepare_dockerfile = async (
   const composed_file_data = docker_template(data);
 
   // Create Dockerfile
-  let out = path.join(process.cwd(), "./Dockerfile");
+  let out = path.join(WORKSPACE_DIR, "Dockerfile");
   await fs.writeFile(out, composed_file_data);
   log.info(`Created ${out}`);
 
   // Copy entrypoint file
-  let out2 = path.join(process.cwd(), "./entrypoint.sh");
+  let out2 = path.join(WORKSPACE_DIR, "entrypoint.sh");
   await fs.copyFile(path.join(templates_dir, "entrypoint.sh"), out2);
   log.info(`Created ${out2}`);
   return;
