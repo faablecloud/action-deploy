@@ -1,16 +1,11 @@
 'use strict';
 
 var tslib_es6 = require('../node_modules/tslib/tslib.es6.js');
-var index = require('../node_modules/fs-extra/lib/index.js');
+require('../node_modules/fs-extra/lib/index.js');
 var run_cmd = require('../lib/run_cmd.js');
 var log = require('../log.js');
+var prepare_dockerfile = require('./prepare_dockerfile.js');
 
-const copy_files = () => {
-    const templates = __dirname + "/templates";
-    const dst = process.cwd();
-    index.default.copySync(`${templates}/Dockerfile.hbs`, `${dst}/Dockerfile`);
-    index.default.copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
-};
 const deploy_action = (ctx, options = { upload: true, cache: true }) => tslib_es6.__awaiter(void 0, void 0, void 0, function* () {
     if (ctx.enable_debug) {
         log.log.debug(ctx);
@@ -18,7 +13,8 @@ const deploy_action = (ctx, options = { upload: true, cache: true }) => tslib_es
     const cmd = run_cmd.get_cmd(ctx);
     // Prepare setup
     log.log.info("🥤 Building image...");
-    copy_files();
+    yield prepare_dockerfile.prepare_dockerfile();
+    // copy_files();
     const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
     // Execute build
     cmd("docker", ["build", `-t`, tag, "."]);
