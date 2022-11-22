@@ -6,8 +6,11 @@ import { nodeResolve } from "@rollup/plugin-node-resolve";
 export default {
   input: "src/index.ts",
   output: {
-    file: "dist/bundle.js",
+    dir: "dist",
     format: "cjs",
+    exports: "named",
+    preserveModules: true,
+    preserveModulesRoot: "src",
   },
   plugins: [json(), typescript(), commonjs(), nodeResolve()],
 };

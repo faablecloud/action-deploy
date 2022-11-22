@@ -2,6 +2,7 @@ import fs from "fs-extra";
 import { FaableContext, get_context } from "../lib/FaableContext";
 import { get_cmd } from "../lib/run_cmd";
 import { log } from "../log";
+import { prepare_dockerfile } from "./prepare_dockerfile";
 
 const copy_files = () => {
   const templates = __dirname + "/templates";
@@ -26,7 +27,8 @@ export const deploy_action = async (
 
   // Prepare setup
   log.info("🥤 Building image...");
-  copy_files();
+  await prepare_dockerfile();
+  // copy_files();
 
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
 

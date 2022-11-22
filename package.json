@@ -30,7 +30,7 @@
   },
   "scripts": {
     "deploy": "ts-node src/index.ts",
-    "build": "rollup --config rollup.config.mjs",
+    "build": "rimraf dist && rollup --config rollup.config.mjs",
     "release": "yarn build && semantic-release",
     "test": "ava -v"
   },

@@ -1,4 +1,4 @@
-#! /bin/sh
+#!/bin/sh
 
 NPM_RUN_COMMAND=$1
 

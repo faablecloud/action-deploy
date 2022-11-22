@@ -1,6 +1,6 @@
-import fs from "fs-extra";
+import * as fs from "fs-extra";
 import Handlebars from "handlebars";
-
+import * as path from "path";
 export interface DockerTemplate {
   from_image: string;
   enablebuild?: boolean;
@@ -15,17 +15,17 @@ const default_build: DockerTemplate = {
   start_script: "start",
 };
 
+const templates_dir = path.join(__dirname, "../../templates");
+const dockerfile = fs
+  .readFileSync(`${templates_dir}/Dockerfile.hbs`)
+  .toString();
+const docker_template = Handlebars.compile(dockerfile);
+
 export const prepare_dockerfile = async (
-  data: DockerTemplate = default_build,
-  write_to: string
+  data: DockerTemplate = default_build
 ) => {
-  const templates_dir = __dirname + "/templates";
-  const docker_tpl = await fs.readFile(`${templates_dir}/Dockerfile.hbs`);
-
   // Compose template with data and write to path
-  const template = Handlebars.compile(docker_tpl.toString());
-  const dockerfile = template(data);
-  await fs.writeFile(dockerfile, write_to);
-
+  const dockerfile = docker_template(data);
+  await fs.writeFile(dockerfile, "./Dockerfile");
   return;
 };
