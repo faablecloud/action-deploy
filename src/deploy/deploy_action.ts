@@ -24,18 +24,18 @@ export const deploy_action = async (
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
 
   // Execute build
-  cmd("docker", ["build", `-t`, tag, "."]);
+  await cmd("docker", ["build", `-t`, tag, "."]);
   log.info(`✅ Build ${ctx.faable_app_name} successful`);
 
   if (options.upload) {
     // Registry login
-    cmd(
+    await cmd(
       `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`
     );
     // Upload the image to faable registry
-    cmd(`docker push ${tag}`);
+    await cmd(`docker push ${tag}`);
 
-    log.info("✅ Successfully deployed to FaableCloud");
+    log.info("✅ Deployed to FaableCloud");
   } else {
     log.warning("🔁 Skipped upload");
   }

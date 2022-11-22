@@ -13434,7 +13434,6 @@ const WORKSPACE_DIR = process.env.GITHUB_WORKSPACE;
 const prepare_dockerfile = (data = default_build) => __awaiter$3(void 0, void 0, void 0, function* () {
     // Compose template with data and write to path
     const composed_file_data = docker_template(data);
-    console.log(composed_file_data);
     // Create Dockerfile
     let out = require$$1__namespace.join(WORKSPACE_DIR, "Dockerfile");
     yield lib$1.writeFile(out, composed_file_data);
@@ -13456,14 +13455,14 @@ const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaite
     // copy_files();
     const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
     // Execute build
-    cmd("docker", ["build", `-t`, tag, "."]);
+    yield cmd("docker", ["build", `-t`, tag, "."]);
     log$2.info(`✅ Build ${ctx.faable_app_name} successful`);
     if (options.upload) {
         // Registry login
-        cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
+        yield cmd(`echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`);
         // Upload the image to faable registry
-        cmd(`docker push ${tag}`);
-        log$2.info("✅ Successfully deployed to FaableCloud");
+        yield cmd(`docker push ${tag}`);
+        log$2.info("✅ Deployed to FaableCloud");
     }
     else {
         log$2.warning("🔁 Skipped upload");

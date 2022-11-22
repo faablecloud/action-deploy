@@ -29,7 +29,7 @@ export const prepare_dockerfile = async (
 ) => {
   // Compose template with data and write to path
   const composed_file_data = docker_template(data);
-  console.log(composed_file_data);
+
   // Create Dockerfile
   let out = path.join(WORKSPACE_DIR, "Dockerfile");
   await fs.writeFile(out, composed_file_data);
