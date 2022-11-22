@@ -11427,6 +11427,7 @@ const get_context = () => {
 const pkg = require(require$$1__namespace.join(__dirname, "../package.json"));
 const main = () => __awaiter(void 0, void 0, void 0, function* () {
     log$2.info(`🚀 faable.com ${pkg.name} - ${pkg.version}`);
+    console.log(process.env);
     const ctx = get_context();
     try {
         yield deploy_action(ctx);
