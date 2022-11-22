@@ -17,7 +17,7 @@ export const get_cmd =
         console.debug(out);
         throw new Error(`Bad Exit ${process.status}`);
       }
-    } catch (error) {
+    } catch (error: any) {
       log.error(error);
       const params = args ? args.join(" ") : "";
       throw new Error(`Error running command ${cmd} with ${params}`);

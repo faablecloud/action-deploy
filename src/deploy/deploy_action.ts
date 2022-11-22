@@ -21,7 +21,7 @@ export const deploy_action = async (
   options: DeployOptions = { upload: true, cache: true }
 ) => {
   if (ctx.enable_debug) {
-    log.debug(ctx);
+    log.debug(JSON.stringify(ctx));
   }
   const cmd = get_cmd(ctx);
 

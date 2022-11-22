@@ -2784,13 +2784,384 @@ var lib$1 = {
   ...remove_1
 };
 
-const core$1 = require("@actions/core");
+var core = {};
+
+var command = {};
+
+var utils$1 = {};
+
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(utils$1, "__esModule", { value: true });
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+utils$1.toCommandValue = toCommandValue;
+
+var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(command, "__esModule", { value: true });
+const os$1 = __importStar$1(require$$0$3);
+const utils_1$1 = utils$1;
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand$1(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os$1.EOL);
+}
+command.issueCommand = issueCommand$1;
+function issue(name, message = '') {
+    issueCommand$1(name, {}, message);
+}
+command.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+function escapeData(s) {
+    return utils_1$1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return utils_1$1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+
+var fileCommand = {};
+
+// For internal use, subject to change.
+var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(fileCommand, "__esModule", { value: true });
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs = __importStar(require$$0$2);
+const os = __importStar(require$$0$3);
+const utils_1 = utils$1;
+function issueCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
+    }
+    if (!fs.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
+    }
+    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
+    });
+}
+fileCommand.issueCommand = issueCommand;
+
+(function (exports) {
+	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+	    result["default"] = mod;
+	    return result;
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	const command_1 = command;
+	const file_command_1 = fileCommand;
+	const utils_1 = utils$1;
+	const os = __importStar(require$$0$3);
+	const path = __importStar(require$$1);
+	/**
+	 * The code to exit an action
+	 */
+	var ExitCode;
+	(function (ExitCode) {
+	    /**
+	     * A code indicating that the action was successful
+	     */
+	    ExitCode[ExitCode["Success"] = 0] = "Success";
+	    /**
+	     * A code indicating that the action was a failure
+	     */
+	    ExitCode[ExitCode["Failure"] = 1] = "Failure";
+	})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
+	//-----------------------------------------------------------------------
+	// Variables
+	//-----------------------------------------------------------------------
+	/**
+	 * Sets env variable for this action and future actions in the job
+	 * @param name the name of the variable to set
+	 * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function exportVariable(name, val) {
+	    const convertedVal = utils_1.toCommandValue(val);
+	    process.env[name] = convertedVal;
+	    const filePath = process.env['GITHUB_ENV'] || '';
+	    if (filePath) {
+	        const delimiter = '_GitHubActionsFileCommandDelimeter_';
+	        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
+	        file_command_1.issueCommand('ENV', commandValue);
+	    }
+	    else {
+	        command_1.issueCommand('set-env', { name }, convertedVal);
+	    }
+	}
+	exports.exportVariable = exportVariable;
+	/**
+	 * Registers a secret which will get masked from logs
+	 * @param secret value of the secret
+	 */
+	function setSecret(secret) {
+	    command_1.issueCommand('add-mask', {}, secret);
+	}
+	exports.setSecret = setSecret;
+	/**
+	 * Prepends inputPath to the PATH (for this action and future actions)
+	 * @param inputPath
+	 */
+	function addPath(inputPath) {
+	    const filePath = process.env['GITHUB_PATH'] || '';
+	    if (filePath) {
+	        file_command_1.issueCommand('PATH', inputPath);
+	    }
+	    else {
+	        command_1.issueCommand('add-path', {}, inputPath);
+	    }
+	    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
+	}
+	exports.addPath = addPath;
+	/**
+	 * Gets the value of an input.  The value is also trimmed.
+	 *
+	 * @param     name     name of the input to get
+	 * @param     options  optional. See InputOptions.
+	 * @returns   string
+	 */
+	function getInput(name, options) {
+	    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+	    if (options && options.required && !val) {
+	        throw new Error(`Input required and not supplied: ${name}`);
+	    }
+	    return val.trim();
+	}
+	exports.getInput = getInput;
+	/**
+	 * Sets the value of an output.
+	 *
+	 * @param     name     name of the output to set
+	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function setOutput(name, value) {
+	    process.stdout.write(os.EOL);
+	    command_1.issueCommand('set-output', { name }, value);
+	}
+	exports.setOutput = setOutput;
+	/**
+	 * Enables or disables the echoing of commands into stdout for the rest of the step.
+	 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
+	 *
+	 */
+	function setCommandEcho(enabled) {
+	    command_1.issue('echo', enabled ? 'on' : 'off');
+	}
+	exports.setCommandEcho = setCommandEcho;
+	//-----------------------------------------------------------------------
+	// Results
+	//-----------------------------------------------------------------------
+	/**
+	 * Sets the action status to failed.
+	 * When the action exits it will be with an exit code of 1
+	 * @param message add error issue message
+	 */
+	function setFailed(message) {
+	    process.exitCode = ExitCode.Failure;
+	    error(message);
+	}
+	exports.setFailed = setFailed;
+	//-----------------------------------------------------------------------
+	// Logging Commands
+	//-----------------------------------------------------------------------
+	/**
+	 * Gets whether Actions Step Debug is on or not
+	 */
+	function isDebug() {
+	    return process.env['RUNNER_DEBUG'] === '1';
+	}
+	exports.isDebug = isDebug;
+	/**
+	 * Writes debug message to user log
+	 * @param message debug message
+	 */
+	function debug(message) {
+	    command_1.issueCommand('debug', {}, message);
+	}
+	exports.debug = debug;
+	/**
+	 * Adds an error issue
+	 * @param message error issue message. Errors will be converted to string via toString()
+	 */
+	function error(message) {
+	    command_1.issue('error', message instanceof Error ? message.toString() : message);
+	}
+	exports.error = error;
+	/**
+	 * Adds an warning issue
+	 * @param message warning issue message. Errors will be converted to string via toString()
+	 */
+	function warning(message) {
+	    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+	}
+	exports.warning = warning;
+	/**
+	 * Writes info to log with console.log.
+	 * @param message info message
+	 */
+	function info(message) {
+	    process.stdout.write(message + os.EOL);
+	}
+	exports.info = info;
+	/**
+	 * Begin an output group.
+	 *
+	 * Output until the next `groupEnd` will be foldable in this group
+	 *
+	 * @param name The name of the output group
+	 */
+	function startGroup(name) {
+	    command_1.issue('group', name);
+	}
+	exports.startGroup = startGroup;
+	/**
+	 * End an output group.
+	 */
+	function endGroup() {
+	    command_1.issue('endgroup');
+	}
+	exports.endGroup = endGroup;
+	/**
+	 * Wrap an asynchronous function call in a group.
+	 *
+	 * Returns the same type as the function itself.
+	 *
+	 * @param name The name of the group
+	 * @param fn The function to wrap in the group
+	 */
+	function group(name, fn) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        startGroup(name);
+	        let result;
+	        try {
+	            result = yield fn();
+	        }
+	        finally {
+	            endGroup();
+	        }
+	        return result;
+	    });
+	}
+	exports.group = group;
+	//-----------------------------------------------------------------------
+	// Wrapper action state
+	//-----------------------------------------------------------------------
+	/**
+	 * Saves state for current action, the state can only be retrieved by this action's post job execution.
+	 *
+	 * @param     name     name of the state to store
+	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function saveState(name, value) {
+	    command_1.issueCommand('save-state', { name }, value);
+	}
+	exports.saveState = saveState;
+	/**
+	 * Gets the value of an state set by this action's main execution.
+	 *
+	 * @param     name     name of the state to get
+	 * @returns   string
+	 */
+	function getState(name) {
+	    return process.env[`STATE_${name}`] || '';
+	}
+	exports.getState = getState;
+	
+} (core));
+
 const log$2 = {
-    error: core$1.error,
-    info: core$1.info,
-    notice: core$1.notice,
-    warning: core$1.warning,
-    debug: core$1.debug,
+    error: core.error,
+    info: core.info,
+    warning: core.warning,
+    debug: core.debug,
 };
 
 const get_cmd = (ctx) => (cmd, args) => {
@@ -2825,16 +3196,16 @@ var handlebars_runtime = {exports: {}};
 
 var base$1 = {};
 
-var utils$1 = {};
+var utils = {};
 
-utils$1.__esModule = true;
-utils$1.extend = extend;
-utils$1.indexOf = indexOf;
-utils$1.escapeExpression = escapeExpression;
-utils$1.isEmpty = isEmpty;
-utils$1.createFrame = createFrame;
-utils$1.blockParams = blockParams;
-utils$1.appendContextPath = appendContextPath;
+utils.__esModule = true;
+utils.extend = extend;
+utils.indexOf = indexOf;
+utils.escapeExpression = escapeExpression;
+utils.isEmpty = isEmpty;
+utils.createFrame = createFrame;
+utils.blockParams = blockParams;
+utils.appendContextPath = appendContextPath;
 var escape = {
   '&': '&amp;',
   '<': '&lt;',
@@ -2866,7 +3237,7 @@ function extend(obj /* , ...source */) {
 
 var toString = Object.prototype.toString;
 
-utils$1.toString = toString;
+utils.toString = toString;
 // Sourced from lodash
 // https://github.com/bestiejs/lodash/blob/master/LICENSE.txt
 /* eslint-disable func-style */
@@ -2876,11 +3247,11 @@ var isFunction = function isFunction(value) {
 // fallback for older versions of Chrome and Safari
 /* istanbul ignore next */
 if (isFunction(/x/)) {
-  utils$1.isFunction = isFunction = function (value) {
+  utils.isFunction = isFunction = function (value) {
     return typeof value === 'function' && toString.call(value) === '[object Function]';
   };
 }
-utils$1.isFunction = isFunction;
+utils.isFunction = isFunction;
 
 /* eslint-enable func-style */
 
@@ -2889,7 +3260,7 @@ var isArray = Array.isArray || function (value) {
   return value && typeof value === 'object' ? toString.call(value) === '[object Array]' : false;
 };
 
-utils$1.isArray = isArray;
+utils.isArray = isArray;
 // Older IE versions do not directly support indexOf so we must implement our own, sadly.
 
 function indexOf(array, value) {
@@ -3025,7 +3396,7 @@ var blockHelperMissing = {exports: {}};
 
 	exports.__esModule = true;
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	exports['default'] = function (instance) {
 	  instance.registerHelper('blockHelperMissing', function (context, options) {
@@ -3071,7 +3442,7 @@ var each = {exports: {}};
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var _exception = exception.exports;
 
@@ -3208,7 +3579,7 @@ var _if = {exports: {}};
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var _exception = exception.exports;
 
@@ -3308,7 +3679,7 @@ var _with = {exports: {}};
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var _exception = exception.exports;
 
@@ -3408,7 +3779,7 @@ var inline = {exports: {}};
 
 	exports.__esModule = true;
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	exports['default'] = function (instance) {
 	  instance.registerDecorator('inline', function (fn, props, container, options) {
@@ -3455,7 +3826,7 @@ var logger$1 = {exports: {}};
 
 	exports.__esModule = true;
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var logger = {
 	  methodMap: ['debug', 'info', 'warn', 'error'],
@@ -3507,7 +3878,7 @@ var createNewLookupObject$1 = {};
 createNewLookupObject$1.__esModule = true;
 createNewLookupObject$1.createNewLookupObject = createNewLookupObject;
 
-var _utils$4 = utils$1;
+var _utils$4 = utils;
 
 /**
  * Create a new object with "null"-prototype to avoid truthy results on prototype properties.
@@ -3601,7 +3972,7 @@ base$1.HandlebarsEnvironment = HandlebarsEnvironment;
 
 function _interopRequireDefault$5(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
 
-var _utils$3 = utils$1;
+var _utils$3 = utils;
 
 var _exception$3 = exception.exports;
 
@@ -3763,7 +4134,7 @@ function _interopRequireDefault$4(obj) { return obj && obj.__esModule ? obj : { 
 
 function _interopRequireWildcard$1(obj) { if (obj && obj.__esModule) { return obj; } else { var newObj = {}; if (obj != null) { for (var key in obj) { if (Object.prototype.hasOwnProperty.call(obj, key)) newObj[key] = obj[key]; } } newObj['default'] = obj; return newObj; } }
 
-var _utils$2 = utils$1;
+var _utils$2 = utils;
 
 var Utils = _interopRequireWildcard$1(_utils$2);
 
@@ -4167,7 +4538,7 @@ var noConflict = {exports: {}};
 
 	var _handlebarsException2 = _interopRequireDefault(_handlebarsException);
 
-	var _handlebarsUtils = utils$1;
+	var _handlebarsUtils = utils;
 
 	var Utils = _interopRequireWildcard(_handlebarsUtils);
 
@@ -5541,7 +5912,7 @@ var _helpers = helpers;
 
 var Helpers = _interopRequireWildcard(_helpers);
 
-var _utils$1 = utils$1;
+var _utils$1 = utils;
 
 base.parser = _parser2['default'];
 
@@ -5589,7 +5960,7 @@ var _exception = exception.exports;
 
 var _exception2 = _interopRequireDefault$1(_exception);
 
-var _utils = utils$1;
+var _utils = utils;
 
 var _ast = ast.exports;
 
@@ -9385,7 +9756,7 @@ function requireSourceMap () {
 
 	exports.__esModule = true;
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var SourceNode = undefined;
 
@@ -9563,7 +9934,7 @@ function requireSourceMap () {
 
 	var _exception2 = _interopRequireDefault(_exception);
 
-	var _utils = utils$1;
+	var _utils = utils;
 
 	var _codeGen = codeGen.exports;
 
@@ -11013,7 +11384,7 @@ const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, v
 
 const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter(void 0, void 0, void 0, function* () {
     if (ctx.enable_debug) {
-        log$2.debug(ctx);
+        log$2.debug(JSON.stringify(ctx));
     }
     const cmd = get_cmd(ctx);
     // Prepare setup
@@ -11035,379 +11406,6 @@ const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaite
         log$2.warning("🔁 Skipped upload");
     }
 });
-
-var core = {};
-
-var command = {};
-
-var utils = {};
-
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(utils, "__esModule", { value: true });
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-utils.toCommandValue = toCommandValue;
-
-var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(command, "__esModule", { value: true });
-const os$1 = __importStar$1(require$$0$3);
-const utils_1$1 = utils;
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand$1(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os$1.EOL);
-}
-command.issueCommand = issueCommand$1;
-function issue(name, message = '') {
-    issueCommand$1(name, {}, message);
-}
-command.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-function escapeData(s) {
-    return utils_1$1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return utils_1$1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-
-var fileCommand = {};
-
-// For internal use, subject to change.
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(fileCommand, "__esModule", { value: true });
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(require$$0$2);
-const os = __importStar(require$$0$3);
-const utils_1 = utils;
-function issueCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
-}
-fileCommand.issueCommand = issueCommand;
-
-(function (exports) {
-	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-	    return new (P || (P = Promise))(function (resolve, reject) {
-	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments || [])).next());
-	    });
-	};
-	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-	    result["default"] = mod;
-	    return result;
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	const command_1 = command;
-	const file_command_1 = fileCommand;
-	const utils_1 = utils;
-	const os = __importStar(require$$0$3);
-	const path = __importStar(require$$1);
-	/**
-	 * The code to exit an action
-	 */
-	var ExitCode;
-	(function (ExitCode) {
-	    /**
-	     * A code indicating that the action was successful
-	     */
-	    ExitCode[ExitCode["Success"] = 0] = "Success";
-	    /**
-	     * A code indicating that the action was a failure
-	     */
-	    ExitCode[ExitCode["Failure"] = 1] = "Failure";
-	})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
-	//-----------------------------------------------------------------------
-	// Variables
-	//-----------------------------------------------------------------------
-	/**
-	 * Sets env variable for this action and future actions in the job
-	 * @param name the name of the variable to set
-	 * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function exportVariable(name, val) {
-	    const convertedVal = utils_1.toCommandValue(val);
-	    process.env[name] = convertedVal;
-	    const filePath = process.env['GITHUB_ENV'] || '';
-	    if (filePath) {
-	        const delimiter = '_GitHubActionsFileCommandDelimeter_';
-	        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-	        file_command_1.issueCommand('ENV', commandValue);
-	    }
-	    else {
-	        command_1.issueCommand('set-env', { name }, convertedVal);
-	    }
-	}
-	exports.exportVariable = exportVariable;
-	/**
-	 * Registers a secret which will get masked from logs
-	 * @param secret value of the secret
-	 */
-	function setSecret(secret) {
-	    command_1.issueCommand('add-mask', {}, secret);
-	}
-	exports.setSecret = setSecret;
-	/**
-	 * Prepends inputPath to the PATH (for this action and future actions)
-	 * @param inputPath
-	 */
-	function addPath(inputPath) {
-	    const filePath = process.env['GITHUB_PATH'] || '';
-	    if (filePath) {
-	        file_command_1.issueCommand('PATH', inputPath);
-	    }
-	    else {
-	        command_1.issueCommand('add-path', {}, inputPath);
-	    }
-	    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
-	}
-	exports.addPath = addPath;
-	/**
-	 * Gets the value of an input.  The value is also trimmed.
-	 *
-	 * @param     name     name of the input to get
-	 * @param     options  optional. See InputOptions.
-	 * @returns   string
-	 */
-	function getInput(name, options) {
-	    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
-	    if (options && options.required && !val) {
-	        throw new Error(`Input required and not supplied: ${name}`);
-	    }
-	    return val.trim();
-	}
-	exports.getInput = getInput;
-	/**
-	 * Sets the value of an output.
-	 *
-	 * @param     name     name of the output to set
-	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function setOutput(name, value) {
-	    process.stdout.write(os.EOL);
-	    command_1.issueCommand('set-output', { name }, value);
-	}
-	exports.setOutput = setOutput;
-	/**
-	 * Enables or disables the echoing of commands into stdout for the rest of the step.
-	 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
-	 *
-	 */
-	function setCommandEcho(enabled) {
-	    command_1.issue('echo', enabled ? 'on' : 'off');
-	}
-	exports.setCommandEcho = setCommandEcho;
-	//-----------------------------------------------------------------------
-	// Results
-	//-----------------------------------------------------------------------
-	/**
-	 * Sets the action status to failed.
-	 * When the action exits it will be with an exit code of 1
-	 * @param message add error issue message
-	 */
-	function setFailed(message) {
-	    process.exitCode = ExitCode.Failure;
-	    error(message);
-	}
-	exports.setFailed = setFailed;
-	//-----------------------------------------------------------------------
-	// Logging Commands
-	//-----------------------------------------------------------------------
-	/**
-	 * Gets whether Actions Step Debug is on or not
-	 */
-	function isDebug() {
-	    return process.env['RUNNER_DEBUG'] === '1';
-	}
-	exports.isDebug = isDebug;
-	/**
-	 * Writes debug message to user log
-	 * @param message debug message
-	 */
-	function debug(message) {
-	    command_1.issueCommand('debug', {}, message);
-	}
-	exports.debug = debug;
-	/**
-	 * Adds an error issue
-	 * @param message error issue message. Errors will be converted to string via toString()
-	 */
-	function error(message) {
-	    command_1.issue('error', message instanceof Error ? message.toString() : message);
-	}
-	exports.error = error;
-	/**
-	 * Adds an warning issue
-	 * @param message warning issue message. Errors will be converted to string via toString()
-	 */
-	function warning(message) {
-	    command_1.issue('warning', message instanceof Error ? message.toString() : message);
-	}
-	exports.warning = warning;
-	/**
-	 * Writes info to log with console.log.
-	 * @param message info message
-	 */
-	function info(message) {
-	    process.stdout.write(message + os.EOL);
-	}
-	exports.info = info;
-	/**
-	 * Begin an output group.
-	 *
-	 * Output until the next `groupEnd` will be foldable in this group
-	 *
-	 * @param name The name of the output group
-	 */
-	function startGroup(name) {
-	    command_1.issue('group', name);
-	}
-	exports.startGroup = startGroup;
-	/**
-	 * End an output group.
-	 */
-	function endGroup() {
-	    command_1.issue('endgroup');
-	}
-	exports.endGroup = endGroup;
-	/**
-	 * Wrap an asynchronous function call in a group.
-	 *
-	 * Returns the same type as the function itself.
-	 *
-	 * @param name The name of the group
-	 * @param fn The function to wrap in the group
-	 */
-	function group(name, fn) {
-	    return __awaiter(this, void 0, void 0, function* () {
-	        startGroup(name);
-	        let result;
-	        try {
-	            result = yield fn();
-	        }
-	        finally {
-	            endGroup();
-	        }
-	        return result;
-	    });
-	}
-	exports.group = group;
-	//-----------------------------------------------------------------------
-	// Wrapper action state
-	//-----------------------------------------------------------------------
-	/**
-	 * Saves state for current action, the state can only be retrieved by this action's post job execution.
-	 *
-	 * @param     name     name of the state to store
-	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function saveState(name, value) {
-	    command_1.issueCommand('save-state', { name }, value);
-	}
-	exports.saveState = saveState;
-	/**
-	 * Gets the value of an state set by this action's main execution.
-	 *
-	 * @param     name     name of the state to get
-	 * @returns   string
-	 */
-	function getState(name) {
-	    return process.env[`STATE_${name}`] || '';
-	}
-	exports.getState = getState;
-	
-} (core));
 
 const get_context = () => {
     return {
