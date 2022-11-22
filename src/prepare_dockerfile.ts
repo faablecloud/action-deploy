@@ -1,6 +1,7 @@
 import * as fs from "fs-extra";
 import Handlebars from "handlebars";
 import * as path from "path";
+import { log } from "./log";
 export interface DockerTemplate {
   from_image: string;
   enablebuild?: boolean;
@@ -29,8 +30,13 @@ export const prepare_dockerfile = async (
 
   // Create Dockerfile
   await fs.writeFile("./Dockerfile", composed_file_data);
+  log.info("Created Dockerfile");
 
   // Copy entrypoint file
-  await fs.copyFile(path.join(templates_dir, "entrypoint.sh"), "entrypoint.sh");
+  await fs.copyFile(
+    path.join(templates_dir, "entrypoint.sh"),
+    "./entrypoint.sh"
+  );
+  log.info("Created entrypoint.sh");
   return;
 };
