@@ -1,7 +1,7 @@
 {
   "name": "@faablecloud/action-deploy",
   "version": "0.0.0-develop",
-  "main": "deploy/index.js",
+  "main": "dist/index.js",
   "repository": "git@github.com:faablecloud/action-deploy.git",
   "author": "Marc Pomar <marc@faable.com>",
   "license": "MIT",
@@ -25,12 +25,11 @@
     "ava": "^3.15.0",
     "nodemon": "^2.0.7",
     "semantic-release": "^18.0.0",
-    "ts-loader": "^9.2.6",
-    "ts-node": "^9.1.1",
+    "ts-node": "^10.9.1",
     "typescript": "^4.9.3"
   },
   "scripts": {
-    "deploy": "ts-node src/cmd/deploy.ts",
+    "deploy": "ts-node src/index.ts",
     "build": "rollup --config rollup.config.mjs",
     "release": "yarn build && semantic-release",
     "test": "ava -v"

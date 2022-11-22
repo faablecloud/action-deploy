@@ -1,14 +1,16 @@
 import { deploy_action } from "./deploy/deploy_action";
 import { get_context } from "./lib/FaableContext";
-import pkg from "../package.json";
+import * as path from "path";
+import { log } from "./log";
+const pkg = require(path.join(__dirname, "../package.json"));
 
 const main = async () => {
-  console.log(`🚀 FaableCloud ${pkg.name} - ${pkg.version}`);
+  log.info(`🚀 faable.com ${pkg.name} - ${pkg.version}`);
   const ctx = get_context();
   try {
     await deploy_action(ctx);
   } catch (error) {
-    console.log(error);
+    log.error(error);
     process.exit(-1);
   }
 };

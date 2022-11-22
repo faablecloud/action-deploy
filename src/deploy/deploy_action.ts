@@ -1,7 +1,7 @@
 import fs from "fs-extra";
-import * as path from "path";
 import { FaableContext, get_context } from "../lib/FaableContext";
 import { get_cmd } from "../lib/run_cmd";
+import { log } from "../log";
 
 const copy_files = () => {
   const templates = __dirname + "/templates";
@@ -20,19 +20,19 @@ export const deploy_action = async (
   options: DeployOptions = { upload: true, cache: true }
 ) => {
   if (ctx.enable_debug) {
-    console.log(ctx);
+    log.debug(ctx);
   }
   const cmd = get_cmd(ctx);
 
   // Prepare setup
-  console.log("🥤 Building docker image...");
+  log.info("🥤 Building image...");
   copy_files();
 
   const tag = `harbor.app.faable.com/${ctx.faable_user}/${ctx.faable_app_name}`;
 
   // Execute build
   cmd("docker", ["build", `-t`, tag, "."]);
-  console.log(`✅ Build ${ctx.faable_app_name} successful`);
+  log.info(`✅ Build ${ctx.faable_app_name} successful`);
 
   if (options.upload) {
     // Registry login
@@ -42,8 +42,8 @@ export const deploy_action = async (
     // Upload the image to faable registry
     cmd(`docker push ${tag}`);
 
-    console.log("✅ Successfully deployed to FaableCloud");
+    log.info("✅ Successfully deployed to FaableCloud");
   } else {
-    console.log("🔁 Skipped upload");
+    log.warning("🔁 Skipped upload");
   }
 };
