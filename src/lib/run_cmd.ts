@@ -13,7 +13,7 @@ export const cmd = async (cmd: string, args?: string[]) => {
       myError += data.toString();
     },
   };
-  options.cwd = "./lib";
+  // options.cwd = "./lib";
 
   await exec.exec(cmd, args, options);
   return myOutput;

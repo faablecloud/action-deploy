@@ -2130,7 +2130,7 @@ const cmd = (cmd, args) => __awaiter$3(void 0, void 0, void 0, function* () {
             myError += data.toString();
         },
     };
-    options.cwd = "./lib";
+    // options.cwd = "./lib";
     yield exec$2.exec(cmd, args, options);
     return myOutput;
 });
