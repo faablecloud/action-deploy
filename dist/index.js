@@ -6,8 +6,8 @@ var require$$0$1 = require('stream');
 var require$$4 = require('util');
 var require$$5 = require('assert');
 var require$$1 = require('path');
-var require$$0$3 = require('os');
 var child_process = require('child_process');
+var require$$0$3 = require('os');
 
 function _interopNamespaceDefault(e) {
     var n = Object.create(null);
@@ -3174,16 +3174,15 @@ const get_cmd = (ctx) => (cmd, args) => {
             shell: true,
         });
         if (process.status != 0) {
-            const out = process.output.toString();
+            const out = process.output.toString() + process.stderr.toString();
             log$2.debug(out);
             throw new Error(`Bad Exit ${process.status}`);
         }
     }
     catch (error) {
-        log$2.error(error);
         const params = args ? args.join(" ") : "";
-        const failure = `Error running command ${cmd} with ${params}`;
-        core.setFailed(failure);
+        const failure = `Running command: ${cmd} ${params}`;
+        // setFailed(failure);
         throw new Error(failure);
     }
 };
@@ -11378,6 +11377,7 @@ const WORKSPACE_DIR = process.env.GITHUB_WORKSPACE;
 const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, void 0, function* () {
     // Compose template with data and write to path
     const composed_file_data = docker_template(data);
+    console.log(composed_file_data);
     // Create Dockerfile
     let out = require$$1__namespace.join(WORKSPACE_DIR, "Dockerfile");
     yield lib$1.writeFile(out, composed_file_data);

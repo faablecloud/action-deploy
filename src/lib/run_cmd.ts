@@ -14,15 +14,14 @@ export const get_cmd =
         shell: true,
       });
       if (process.status != 0) {
-        const out = process.output.toString();
+        const out = process.output.toString() + process.stderr.toString();
         log.debug(out);
         throw new Error(`Bad Exit ${process.status}`);
       }
     } catch (error: any) {
-      log.error(error as Error);
       const params = args ? args.join(" ") : "";
-      const failure = `Error running command ${cmd} with ${params}`;
-      setFailed(failure);
+      const failure = `Running command: ${cmd} ${params}`;
+      // setFailed(failure);
       throw new Error(failure);
     }
   };
