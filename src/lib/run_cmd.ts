@@ -14,11 +14,11 @@ export const get_cmd =
       });
       if (process.status != 0) {
         const out = process.output.toString();
-        console.debug(out);
+        log.debug(out);
         throw new Error(`Bad Exit ${process.status}`);
       }
     } catch (error: any) {
-      log.error(error);
+      log.error(error as Error);
       const params = args ? args.join(" ") : "";
       throw new Error(`Error running command ${cmd} with ${params}`);
     }

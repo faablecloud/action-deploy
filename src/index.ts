@@ -9,8 +9,8 @@ const main = async () => {
   const ctx = get_context();
   try {
     await deploy_action(ctx);
-  } catch (error: any) {
-    log.error(error);
+  } catch (error) {
+    log.error((error as Error).message);
     process.exit(-1);
   }
 };

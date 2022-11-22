@@ -3175,7 +3175,7 @@ const get_cmd = (ctx) => (cmd, args) => {
         });
         if (process.status != 0) {
             const out = process.output.toString();
-            console.debug(out);
+            log$2.debug(out);
             throw new Error(`Bad Exit ${process.status}`);
         }
     }
@@ -11428,7 +11428,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
         yield deploy_action(ctx);
     }
     catch (error) {
-        log$2.error(error);
+        log$2.error(error.message);
         process.exit(-1);
     }
 });
