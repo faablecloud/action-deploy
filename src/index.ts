@@ -2,7 +2,7 @@ import { deploy_action } from "./deploy/deploy_action";
 import { get_context } from "./lib/FaableContext";
 import * as path from "path";
 import { log } from "./log";
-import { setFailed } from "@actions/core";
+
 const pkg = require(path.join(__dirname, "../package.json"));
 
 const main = async () => {
@@ -13,7 +13,6 @@ const main = async () => {
     await deploy_action(ctx);
   } catch (error: any) {
     log.error((error as Error).message);
-    setFailed(error);
     process.exit(-1);
   }
 };

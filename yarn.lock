@@ -34,6 +34,13 @@
   dependencies:
     "@actions/io" "^1.0.1"
 
+"@actions/exec@^1.1.1":
+  version "1.1.1"
+  resolved "https://registry.yarnpkg.com/@actions/exec/-/exec-1.1.1.tgz#2e43f28c54022537172819a7cf886c844221a611"
+  integrity sha512-+sCcHHbVdk93a0XT19ECtO/gIXoxvdsgQLzb2fE2/5sIZmWQuluYyjPQtrtTHdU1YzTZ7bAPN4sITq2xi1679w==
+  dependencies:
+    "@actions/io" "^1.0.1"
+
 "@actions/glob@^0.1.0":
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/@actions/glob/-/glob-0.1.2.tgz#9685ed2d6583093479c8f137d067c4329d7d0974"

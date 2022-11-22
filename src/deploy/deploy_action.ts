@@ -1,15 +1,7 @@
-import fs from "fs-extra";
-import { FaableContext, get_context } from "../lib/FaableContext";
-import { get_cmd } from "../lib/run_cmd";
+import { FaableContext } from "../lib/FaableContext";
+import { cmd } from "../lib/run_cmd";
 import { log } from "../log";
 import { prepare_dockerfile } from "../prepare_dockerfile";
-
-const copy_files = () => {
-  const templates = __dirname + "/templates";
-  const dst = process.cwd();
-  fs.copySync(`${templates}/Dockerfile.hbs`, `${dst}/Dockerfile`);
-  fs.copySync(`${templates}/entrypoint.sh`, `${dst}/entrypoint.sh`);
-};
 
 interface DeployOptions {
   upload: boolean;
@@ -23,7 +15,6 @@ export const deploy_action = async (
   if (ctx.enable_debug) {
     log.debug(JSON.stringify(ctx));
   }
-  const cmd = get_cmd(ctx);
 
   // Prepare setup
   log.info("🥤 Building image...");

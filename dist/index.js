@@ -1,13 +1,15 @@
 'use strict';
 
-var require$$0$2 = require('fs');
-var require$$0 = require('constants');
-var require$$0$1 = require('stream');
-var require$$4 = require('util');
-var require$$5 = require('assert');
+var require$$0 = require('buffer');
+var require$$0$4 = require('os');
+var require$$0$3 = require('child_process');
 var require$$1 = require('path');
-var child_process = require('child_process');
-var require$$0$3 = require('os');
+var require$$2 = require('util');
+var require$$0$2 = require('assert');
+var require$$0$1 = require('fs');
+var require$$6 = require('timers');
+var require$$0$5 = require('constants');
+var require$$0$6 = require('stream');
 
 function _interopNamespaceDefault(e) {
     var n = Object.create(null);
@@ -43,7 +45,7 @@ OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
 PERFORMANCE OF THIS SOFTWARE.
 ***************************************************************************** */
 
-function __awaiter(thisArg, _arguments, P, generator) {
+function __awaiter$3(thisArg, _arguments, P, generator) {
     function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
     return new (P || (P = Promise))(function (resolve, reject) {
         function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
@@ -55,7 +57,2465 @@ function __awaiter(thisArg, _arguments, P, generator) {
 
 var commonjsGlobal = typeof globalThis !== 'undefined' ? globalThis : typeof window !== 'undefined' ? window : typeof global !== 'undefined' ? global : typeof self !== 'undefined' ? self : {};
 
-var fs$j = {};
+var exec$2 = {};
+
+var string_decoder = {};
+
+var safeBuffer = {exports: {}};
+
+/* eslint-disable node/no-deprecated-api */
+
+(function (module, exports) {
+	var buffer = require$$0;
+	var Buffer = buffer.Buffer;
+
+	// alternative to using Object.keys for old browsers
+	function copyProps (src, dst) {
+	  for (var key in src) {
+	    dst[key] = src[key];
+	  }
+	}
+	if (Buffer.from && Buffer.alloc && Buffer.allocUnsafe && Buffer.allocUnsafeSlow) {
+	  module.exports = buffer;
+	} else {
+	  // Copy properties from require('buffer')
+	  copyProps(buffer, exports);
+	  exports.Buffer = SafeBuffer;
+	}
+
+	function SafeBuffer (arg, encodingOrOffset, length) {
+	  return Buffer(arg, encodingOrOffset, length)
+	}
+
+	// Copy static methods from Buffer
+	copyProps(Buffer, SafeBuffer);
+
+	SafeBuffer.from = function (arg, encodingOrOffset, length) {
+	  if (typeof arg === 'number') {
+	    throw new TypeError('Argument must not be a number')
+	  }
+	  return Buffer(arg, encodingOrOffset, length)
+	};
+
+	SafeBuffer.alloc = function (size, fill, encoding) {
+	  if (typeof size !== 'number') {
+	    throw new TypeError('Argument must be a number')
+	  }
+	  var buf = Buffer(size);
+	  if (fill !== undefined) {
+	    if (typeof encoding === 'string') {
+	      buf.fill(fill, encoding);
+	    } else {
+	      buf.fill(fill);
+	    }
+	  } else {
+	    buf.fill(0);
+	  }
+	  return buf
+	};
+
+	SafeBuffer.allocUnsafe = function (size) {
+	  if (typeof size !== 'number') {
+	    throw new TypeError('Argument must be a number')
+	  }
+	  return Buffer(size)
+	};
+
+	SafeBuffer.allocUnsafeSlow = function (size) {
+	  if (typeof size !== 'number') {
+	    throw new TypeError('Argument must be a number')
+	  }
+	  return buffer.SlowBuffer(size)
+	};
+} (safeBuffer, safeBuffer.exports));
+
+/*<replacement>*/
+
+var Buffer$1 = safeBuffer.exports.Buffer;
+/*</replacement>*/
+
+var isEncoding = Buffer$1.isEncoding || function (encoding) {
+  encoding = '' + encoding;
+  switch (encoding && encoding.toLowerCase()) {
+    case 'hex':case 'utf8':case 'utf-8':case 'ascii':case 'binary':case 'base64':case 'ucs2':case 'ucs-2':case 'utf16le':case 'utf-16le':case 'raw':
+      return true;
+    default:
+      return false;
+  }
+};
+
+function _normalizeEncoding(enc) {
+  if (!enc) return 'utf8';
+  var retried;
+  while (true) {
+    switch (enc) {
+      case 'utf8':
+      case 'utf-8':
+        return 'utf8';
+      case 'ucs2':
+      case 'ucs-2':
+      case 'utf16le':
+      case 'utf-16le':
+        return 'utf16le';
+      case 'latin1':
+      case 'binary':
+        return 'latin1';
+      case 'base64':
+      case 'ascii':
+      case 'hex':
+        return enc;
+      default:
+        if (retried) return; // undefined
+        enc = ('' + enc).toLowerCase();
+        retried = true;
+    }
+  }
+}
+// Do not cache `Buffer.isEncoding` when checking encoding names as some
+// modules monkey-patch it to support additional encodings
+function normalizeEncoding(enc) {
+  var nenc = _normalizeEncoding(enc);
+  if (typeof nenc !== 'string' && (Buffer$1.isEncoding === isEncoding || !isEncoding(enc))) throw new Error('Unknown encoding: ' + enc);
+  return nenc || enc;
+}
+
+// StringDecoder provides an interface for efficiently splitting a series of
+// buffers into a series of JS strings without breaking apart multi-byte
+// characters.
+string_decoder.StringDecoder = StringDecoder;
+function StringDecoder(encoding) {
+  this.encoding = normalizeEncoding(encoding);
+  var nb;
+  switch (this.encoding) {
+    case 'utf16le':
+      this.text = utf16Text;
+      this.end = utf16End;
+      nb = 4;
+      break;
+    case 'utf8':
+      this.fillLast = utf8FillLast;
+      nb = 4;
+      break;
+    case 'base64':
+      this.text = base64Text;
+      this.end = base64End;
+      nb = 3;
+      break;
+    default:
+      this.write = simpleWrite;
+      this.end = simpleEnd;
+      return;
+  }
+  this.lastNeed = 0;
+  this.lastTotal = 0;
+  this.lastChar = Buffer$1.allocUnsafe(nb);
+}
+
+StringDecoder.prototype.write = function (buf) {
+  if (buf.length === 0) return '';
+  var r;
+  var i;
+  if (this.lastNeed) {
+    r = this.fillLast(buf);
+    if (r === undefined) return '';
+    i = this.lastNeed;
+    this.lastNeed = 0;
+  } else {
+    i = 0;
+  }
+  if (i < buf.length) return r ? r + this.text(buf, i) : this.text(buf, i);
+  return r || '';
+};
+
+StringDecoder.prototype.end = utf8End;
+
+// Returns only complete characters in a Buffer
+StringDecoder.prototype.text = utf8Text;
+
+// Attempts to complete a partial non-UTF-8 character using bytes from a Buffer
+StringDecoder.prototype.fillLast = function (buf) {
+  if (this.lastNeed <= buf.length) {
+    buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, this.lastNeed);
+    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
+  }
+  buf.copy(this.lastChar, this.lastTotal - this.lastNeed, 0, buf.length);
+  this.lastNeed -= buf.length;
+};
+
+// Checks the type of a UTF-8 byte, whether it's ASCII, a leading byte, or a
+// continuation byte. If an invalid byte is detected, -2 is returned.
+function utf8CheckByte(byte) {
+  if (byte <= 0x7F) return 0;else if (byte >> 5 === 0x06) return 2;else if (byte >> 4 === 0x0E) return 3;else if (byte >> 3 === 0x1E) return 4;
+  return byte >> 6 === 0x02 ? -1 : -2;
+}
+
+// Checks at most 3 bytes at the end of a Buffer in order to detect an
+// incomplete multi-byte UTF-8 character. The total number of bytes (2, 3, or 4)
+// needed to complete the UTF-8 character (if applicable) are returned.
+function utf8CheckIncomplete(self, buf, i) {
+  var j = buf.length - 1;
+  if (j < i) return 0;
+  var nb = utf8CheckByte(buf[j]);
+  if (nb >= 0) {
+    if (nb > 0) self.lastNeed = nb - 1;
+    return nb;
+  }
+  if (--j < i || nb === -2) return 0;
+  nb = utf8CheckByte(buf[j]);
+  if (nb >= 0) {
+    if (nb > 0) self.lastNeed = nb - 2;
+    return nb;
+  }
+  if (--j < i || nb === -2) return 0;
+  nb = utf8CheckByte(buf[j]);
+  if (nb >= 0) {
+    if (nb > 0) {
+      if (nb === 2) nb = 0;else self.lastNeed = nb - 3;
+    }
+    return nb;
+  }
+  return 0;
+}
+
+// Validates as many continuation bytes for a multi-byte UTF-8 character as
+// needed or are available. If we see a non-continuation byte where we expect
+// one, we "replace" the validated continuation bytes we've seen so far with
+// a single UTF-8 replacement character ('\ufffd'), to match v8's UTF-8 decoding
+// behavior. The continuation byte check is included three times in the case
+// where all of the continuation bytes for a character exist in the same buffer.
+// It is also done this way as a slight performance increase instead of using a
+// loop.
+function utf8CheckExtraBytes(self, buf, p) {
+  if ((buf[0] & 0xC0) !== 0x80) {
+    self.lastNeed = 0;
+    return '\ufffd';
+  }
+  if (self.lastNeed > 1 && buf.length > 1) {
+    if ((buf[1] & 0xC0) !== 0x80) {
+      self.lastNeed = 1;
+      return '\ufffd';
+    }
+    if (self.lastNeed > 2 && buf.length > 2) {
+      if ((buf[2] & 0xC0) !== 0x80) {
+        self.lastNeed = 2;
+        return '\ufffd';
+      }
+    }
+  }
+}
+
+// Attempts to complete a multi-byte UTF-8 character using bytes from a Buffer.
+function utf8FillLast(buf) {
+  var p = this.lastTotal - this.lastNeed;
+  var r = utf8CheckExtraBytes(this, buf);
+  if (r !== undefined) return r;
+  if (this.lastNeed <= buf.length) {
+    buf.copy(this.lastChar, p, 0, this.lastNeed);
+    return this.lastChar.toString(this.encoding, 0, this.lastTotal);
+  }
+  buf.copy(this.lastChar, p, 0, buf.length);
+  this.lastNeed -= buf.length;
+}
+
+// Returns all complete UTF-8 characters in a Buffer. If the Buffer ended on a
+// partial character, the character's bytes are buffered until the required
+// number of bytes are available.
+function utf8Text(buf, i) {
+  var total = utf8CheckIncomplete(this, buf, i);
+  if (!this.lastNeed) return buf.toString('utf8', i);
+  this.lastTotal = total;
+  var end = buf.length - (total - this.lastNeed);
+  buf.copy(this.lastChar, 0, end);
+  return buf.toString('utf8', i, end);
+}
+
+// For UTF-8, a replacement character is added when ending on a partial
+// character.
+function utf8End(buf) {
+  var r = buf && buf.length ? this.write(buf) : '';
+  if (this.lastNeed) return r + '\ufffd';
+  return r;
+}
+
+// UTF-16LE typically needs two bytes per character, but even if we have an even
+// number of bytes available, we need to check if we end on a leading/high
+// surrogate. In that case, we need to wait for the next two bytes in order to
+// decode the last character properly.
+function utf16Text(buf, i) {
+  if ((buf.length - i) % 2 === 0) {
+    var r = buf.toString('utf16le', i);
+    if (r) {
+      var c = r.charCodeAt(r.length - 1);
+      if (c >= 0xD800 && c <= 0xDBFF) {
+        this.lastNeed = 2;
+        this.lastTotal = 4;
+        this.lastChar[0] = buf[buf.length - 2];
+        this.lastChar[1] = buf[buf.length - 1];
+        return r.slice(0, -1);
+      }
+    }
+    return r;
+  }
+  this.lastNeed = 1;
+  this.lastTotal = 2;
+  this.lastChar[0] = buf[buf.length - 1];
+  return buf.toString('utf16le', i, buf.length - 1);
+}
+
+// For UTF-16LE we do not explicitly append special replacement characters if we
+// end on a partial character, we simply let v8 handle that.
+function utf16End(buf) {
+  var r = buf && buf.length ? this.write(buf) : '';
+  if (this.lastNeed) {
+    var end = this.lastTotal - this.lastNeed;
+    return r + this.lastChar.toString('utf16le', 0, end);
+  }
+  return r;
+}
+
+function base64Text(buf, i) {
+  var n = (buf.length - i) % 3;
+  if (n === 0) return buf.toString('base64', i);
+  this.lastNeed = 3 - n;
+  this.lastTotal = 3;
+  if (n === 1) {
+    this.lastChar[0] = buf[buf.length - 1];
+  } else {
+    this.lastChar[0] = buf[buf.length - 2];
+    this.lastChar[1] = buf[buf.length - 1];
+  }
+  return buf.toString('base64', i, buf.length - n);
+}
+
+function base64End(buf) {
+  var r = buf && buf.length ? this.write(buf) : '';
+  if (this.lastNeed) return r + this.lastChar.toString('base64', 0, 3 - this.lastNeed);
+  return r;
+}
+
+// Pass bytes on through for single-byte encodings (e.g. ascii, latin1, hex)
+function simpleWrite(buf) {
+  return buf.toString(this.encoding);
+}
+
+function simpleEnd(buf) {
+  return buf && buf.length ? this.write(buf) : '';
+}
+
+var toolrunner = {};
+
+var events$1 = {exports: {}};
+
+var R = typeof Reflect === 'object' ? Reflect : null;
+var ReflectApply = R && typeof R.apply === 'function'
+  ? R.apply
+  : function ReflectApply(target, receiver, args) {
+    return Function.prototype.apply.call(target, receiver, args);
+  };
+
+var ReflectOwnKeys;
+if (R && typeof R.ownKeys === 'function') {
+  ReflectOwnKeys = R.ownKeys;
+} else if (Object.getOwnPropertySymbols) {
+  ReflectOwnKeys = function ReflectOwnKeys(target) {
+    return Object.getOwnPropertyNames(target)
+      .concat(Object.getOwnPropertySymbols(target));
+  };
+} else {
+  ReflectOwnKeys = function ReflectOwnKeys(target) {
+    return Object.getOwnPropertyNames(target);
+  };
+}
+
+function ProcessEmitWarning(warning) {
+  if (console && console.warn) console.warn(warning);
+}
+
+var NumberIsNaN = Number.isNaN || function NumberIsNaN(value) {
+  return value !== value;
+};
+
+function EventEmitter() {
+  EventEmitter.init.call(this);
+}
+events$1.exports = EventEmitter;
+events$1.exports.once = once;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._eventsCount = 0;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+var defaultMaxListeners = 10;
+
+function checkListener(listener) {
+  if (typeof listener !== 'function') {
+    throw new TypeError('The "listener" argument must be of type Function. Received type ' + typeof listener);
+  }
+}
+
+Object.defineProperty(EventEmitter, 'defaultMaxListeners', {
+  enumerable: true,
+  get: function() {
+    return defaultMaxListeners;
+  },
+  set: function(arg) {
+    if (typeof arg !== 'number' || arg < 0 || NumberIsNaN(arg)) {
+      throw new RangeError('The value of "defaultMaxListeners" is out of range. It must be a non-negative number. Received ' + arg + '.');
+    }
+    defaultMaxListeners = arg;
+  }
+});
+
+EventEmitter.init = function() {
+
+  if (this._events === undefined ||
+      this._events === Object.getPrototypeOf(this)._events) {
+    this._events = Object.create(null);
+    this._eventsCount = 0;
+  }
+
+  this._maxListeners = this._maxListeners || undefined;
+};
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function setMaxListeners(n) {
+  if (typeof n !== 'number' || n < 0 || NumberIsNaN(n)) {
+    throw new RangeError('The value of "n" is out of range. It must be a non-negative number. Received ' + n + '.');
+  }
+  this._maxListeners = n;
+  return this;
+};
+
+function _getMaxListeners(that) {
+  if (that._maxListeners === undefined)
+    return EventEmitter.defaultMaxListeners;
+  return that._maxListeners;
+}
+
+EventEmitter.prototype.getMaxListeners = function getMaxListeners() {
+  return _getMaxListeners(this);
+};
+
+EventEmitter.prototype.emit = function emit(type) {
+  var args = [];
+  for (var i = 1; i < arguments.length; i++) args.push(arguments[i]);
+  var doError = (type === 'error');
+
+  var events = this._events;
+  if (events !== undefined)
+    doError = (doError && events.error === undefined);
+  else if (!doError)
+    return false;
+
+  // If there is no 'error' event listener then throw.
+  if (doError) {
+    var er;
+    if (args.length > 0)
+      er = args[0];
+    if (er instanceof Error) {
+      // Note: The comments on the `throw` lines are intentional, they show
+      // up in Node's output if this results in an unhandled exception.
+      throw er; // Unhandled 'error' event
+    }
+    // At least give some kind of context to the user
+    var err = new Error('Unhandled error.' + (er ? ' (' + er.message + ')' : ''));
+    err.context = er;
+    throw err; // Unhandled 'error' event
+  }
+
+  var handler = events[type];
+
+  if (handler === undefined)
+    return false;
+
+  if (typeof handler === 'function') {
+    ReflectApply(handler, this, args);
+  } else {
+    var len = handler.length;
+    var listeners = arrayClone(handler, len);
+    for (var i = 0; i < len; ++i)
+      ReflectApply(listeners[i], this, args);
+  }
+
+  return true;
+};
+
+function _addListener(target, type, listener, prepend) {
+  var m;
+  var events;
+  var existing;
+
+  checkListener(listener);
+
+  events = target._events;
+  if (events === undefined) {
+    events = target._events = Object.create(null);
+    target._eventsCount = 0;
+  } else {
+    // To avoid recursion in the case that type === "newListener"! Before
+    // adding it to the listeners, first emit "newListener".
+    if (events.newListener !== undefined) {
+      target.emit('newListener', type,
+                  listener.listener ? listener.listener : listener);
+
+      // Re-assign `events` because a newListener handler could have caused the
+      // this._events to be assigned to a new object
+      events = target._events;
+    }
+    existing = events[type];
+  }
+
+  if (existing === undefined) {
+    // Optimize the case of one listener. Don't need the extra array object.
+    existing = events[type] = listener;
+    ++target._eventsCount;
+  } else {
+    if (typeof existing === 'function') {
+      // Adding the second element, need to change to array.
+      existing = events[type] =
+        prepend ? [listener, existing] : [existing, listener];
+      // If we've already got an array, just append.
+    } else if (prepend) {
+      existing.unshift(listener);
+    } else {
+      existing.push(listener);
+    }
+
+    // Check for listener leak
+    m = _getMaxListeners(target);
+    if (m > 0 && existing.length > m && !existing.warned) {
+      existing.warned = true;
+      // No error code for this since it is a Warning
+      // eslint-disable-next-line no-restricted-syntax
+      var w = new Error('Possible EventEmitter memory leak detected. ' +
+                          existing.length + ' ' + String(type) + ' listeners ' +
+                          'added. Use emitter.setMaxListeners() to ' +
+                          'increase limit');
+      w.name = 'MaxListenersExceededWarning';
+      w.emitter = target;
+      w.type = type;
+      w.count = existing.length;
+      ProcessEmitWarning(w);
+    }
+  }
+
+  return target;
+}
+
+EventEmitter.prototype.addListener = function addListener(type, listener) {
+  return _addListener(this, type, listener, false);
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.prependListener =
+    function prependListener(type, listener) {
+      return _addListener(this, type, listener, true);
+    };
+
+function onceWrapper() {
+  if (!this.fired) {
+    this.target.removeListener(this.type, this.wrapFn);
+    this.fired = true;
+    if (arguments.length === 0)
+      return this.listener.call(this.target);
+    return this.listener.apply(this.target, arguments);
+  }
+}
+
+function _onceWrap(target, type, listener) {
+  var state = { fired: false, wrapFn: undefined, target: target, type: type, listener: listener };
+  var wrapped = onceWrapper.bind(state);
+  wrapped.listener = listener;
+  state.wrapFn = wrapped;
+  return wrapped;
+}
+
+EventEmitter.prototype.once = function once(type, listener) {
+  checkListener(listener);
+  this.on(type, _onceWrap(this, type, listener));
+  return this;
+};
+
+EventEmitter.prototype.prependOnceListener =
+    function prependOnceListener(type, listener) {
+      checkListener(listener);
+      this.prependListener(type, _onceWrap(this, type, listener));
+      return this;
+    };
+
+// Emits a 'removeListener' event if and only if the listener was removed.
+EventEmitter.prototype.removeListener =
+    function removeListener(type, listener) {
+      var list, events, position, i, originalListener;
+
+      checkListener(listener);
+
+      events = this._events;
+      if (events === undefined)
+        return this;
+
+      list = events[type];
+      if (list === undefined)
+        return this;
+
+      if (list === listener || list.listener === listener) {
+        if (--this._eventsCount === 0)
+          this._events = Object.create(null);
+        else {
+          delete events[type];
+          if (events.removeListener)
+            this.emit('removeListener', type, list.listener || listener);
+        }
+      } else if (typeof list !== 'function') {
+        position = -1;
+
+        for (i = list.length - 1; i >= 0; i--) {
+          if (list[i] === listener || list[i].listener === listener) {
+            originalListener = list[i].listener;
+            position = i;
+            break;
+          }
+        }
+
+        if (position < 0)
+          return this;
+
+        if (position === 0)
+          list.shift();
+        else {
+          spliceOne(list, position);
+        }
+
+        if (list.length === 1)
+          events[type] = list[0];
+
+        if (events.removeListener !== undefined)
+          this.emit('removeListener', type, originalListener || listener);
+      }
+
+      return this;
+    };
+
+EventEmitter.prototype.off = EventEmitter.prototype.removeListener;
+
+EventEmitter.prototype.removeAllListeners =
+    function removeAllListeners(type) {
+      var listeners, events, i;
+
+      events = this._events;
+      if (events === undefined)
+        return this;
+
+      // not listening for removeListener, no need to emit
+      if (events.removeListener === undefined) {
+        if (arguments.length === 0) {
+          this._events = Object.create(null);
+          this._eventsCount = 0;
+        } else if (events[type] !== undefined) {
+          if (--this._eventsCount === 0)
+            this._events = Object.create(null);
+          else
+            delete events[type];
+        }
+        return this;
+      }
+
+      // emit removeListener for all listeners on all events
+      if (arguments.length === 0) {
+        var keys = Object.keys(events);
+        var key;
+        for (i = 0; i < keys.length; ++i) {
+          key = keys[i];
+          if (key === 'removeListener') continue;
+          this.removeAllListeners(key);
+        }
+        this.removeAllListeners('removeListener');
+        this._events = Object.create(null);
+        this._eventsCount = 0;
+        return this;
+      }
+
+      listeners = events[type];
+
+      if (typeof listeners === 'function') {
+        this.removeListener(type, listeners);
+      } else if (listeners !== undefined) {
+        // LIFO order
+        for (i = listeners.length - 1; i >= 0; i--) {
+          this.removeListener(type, listeners[i]);
+        }
+      }
+
+      return this;
+    };
+
+function _listeners(target, type, unwrap) {
+  var events = target._events;
+
+  if (events === undefined)
+    return [];
+
+  var evlistener = events[type];
+  if (evlistener === undefined)
+    return [];
+
+  if (typeof evlistener === 'function')
+    return unwrap ? [evlistener.listener || evlistener] : [evlistener];
+
+  return unwrap ?
+    unwrapListeners(evlistener) : arrayClone(evlistener, evlistener.length);
+}
+
+EventEmitter.prototype.listeners = function listeners(type) {
+  return _listeners(this, type, true);
+};
+
+EventEmitter.prototype.rawListeners = function rawListeners(type) {
+  return _listeners(this, type, false);
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  if (typeof emitter.listenerCount === 'function') {
+    return emitter.listenerCount(type);
+  } else {
+    return listenerCount.call(emitter, type);
+  }
+};
+
+EventEmitter.prototype.listenerCount = listenerCount;
+function listenerCount(type) {
+  var events = this._events;
+
+  if (events !== undefined) {
+    var evlistener = events[type];
+
+    if (typeof evlistener === 'function') {
+      return 1;
+    } else if (evlistener !== undefined) {
+      return evlistener.length;
+    }
+  }
+
+  return 0;
+}
+
+EventEmitter.prototype.eventNames = function eventNames() {
+  return this._eventsCount > 0 ? ReflectOwnKeys(this._events) : [];
+};
+
+function arrayClone(arr, n) {
+  var copy = new Array(n);
+  for (var i = 0; i < n; ++i)
+    copy[i] = arr[i];
+  return copy;
+}
+
+function spliceOne(list, index) {
+  for (; index + 1 < list.length; index++)
+    list[index] = list[index + 1];
+  list.pop();
+}
+
+function unwrapListeners(arr) {
+  var ret = new Array(arr.length);
+  for (var i = 0; i < ret.length; ++i) {
+    ret[i] = arr[i].listener || arr[i];
+  }
+  return ret;
+}
+
+function once(emitter, name) {
+  return new Promise(function (resolve, reject) {
+    function errorListener(err) {
+      emitter.removeListener(name, resolver);
+      reject(err);
+    }
+
+    function resolver() {
+      if (typeof emitter.removeListener === 'function') {
+        emitter.removeListener('error', errorListener);
+      }
+      resolve([].slice.call(arguments));
+    }
+    eventTargetAgnosticAddListener(emitter, name, resolver, { once: true });
+    if (name !== 'error') {
+      addErrorHandlerIfEventEmitter(emitter, errorListener, { once: true });
+    }
+  });
+}
+
+function addErrorHandlerIfEventEmitter(emitter, handler, flags) {
+  if (typeof emitter.on === 'function') {
+    eventTargetAgnosticAddListener(emitter, 'error', handler, flags);
+  }
+}
+
+function eventTargetAgnosticAddListener(emitter, name, listener, flags) {
+  if (typeof emitter.on === 'function') {
+    if (flags.once) {
+      emitter.once(name, listener);
+    } else {
+      emitter.on(name, listener);
+    }
+  } else if (typeof emitter.addEventListener === 'function') {
+    // EventTarget does not have `error` event semantics like Node
+    // EventEmitters, we do not listen for `error` events here.
+    emitter.addEventListener(name, function wrapListener(arg) {
+      // IE does not have builtin `{ once: true }` support so we
+      // have to do it manually.
+      if (flags.once) {
+        emitter.removeEventListener(name, wrapListener);
+      }
+      listener(arg);
+    });
+  } else {
+    throw new TypeError('The "emitter" argument must be of type EventEmitter. Received type ' + typeof emitter);
+  }
+}
+
+var io$1 = {};
+
+var ioUtil$2 = {};
+
+(function (exports) {
+	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+	    result["default"] = mod;
+	    return result;
+	};
+	var _a;
+	Object.defineProperty(exports, "__esModule", { value: true });
+	const assert_1 = require$$0$2;
+	const fs = __importStar(require$$0$1);
+	const path = __importStar(require$$1);
+	_a = fs.promises, exports.chmod = _a.chmod, exports.copyFile = _a.copyFile, exports.lstat = _a.lstat, exports.mkdir = _a.mkdir, exports.readdir = _a.readdir, exports.readlink = _a.readlink, exports.rename = _a.rename, exports.rmdir = _a.rmdir, exports.stat = _a.stat, exports.symlink = _a.symlink, exports.unlink = _a.unlink;
+	exports.IS_WINDOWS = process.platform === 'win32';
+	function exists(fsPath) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        try {
+	            yield exports.stat(fsPath);
+	        }
+	        catch (err) {
+	            if (err.code === 'ENOENT') {
+	                return false;
+	            }
+	            throw err;
+	        }
+	        return true;
+	    });
+	}
+	exports.exists = exists;
+	function isDirectory(fsPath, useStat = false) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        const stats = useStat ? yield exports.stat(fsPath) : yield exports.lstat(fsPath);
+	        return stats.isDirectory();
+	    });
+	}
+	exports.isDirectory = isDirectory;
+	/**
+	 * On OSX/Linux, true if path starts with '/'. On Windows, true for paths like:
+	 * \, \hello, \\hello\share, C:, and C:\hello (and corresponding alternate separator cases).
+	 */
+	function isRooted(p) {
+	    p = normalizeSeparators(p);
+	    if (!p) {
+	        throw new Error('isRooted() parameter "p" cannot be empty');
+	    }
+	    if (exports.IS_WINDOWS) {
+	        return (p.startsWith('\\') || /^[A-Z]:/i.test(p) // e.g. \ or \hello or \\hello
+	        ); // e.g. C: or C:\hello
+	    }
+	    return p.startsWith('/');
+	}
+	exports.isRooted = isRooted;
+	/**
+	 * Recursively create a directory at `fsPath`.
+	 *
+	 * This implementation is optimistic, meaning it attempts to create the full
+	 * path first, and backs up the path stack from there.
+	 *
+	 * @param fsPath The path to create
+	 * @param maxDepth The maximum recursion depth
+	 * @param depth The current recursion depth
+	 */
+	function mkdirP(fsPath, maxDepth = 1000, depth = 1) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        assert_1.ok(fsPath, 'a path argument must be provided');
+	        fsPath = path.resolve(fsPath);
+	        if (depth >= maxDepth)
+	            return exports.mkdir(fsPath);
+	        try {
+	            yield exports.mkdir(fsPath);
+	            return;
+	        }
+	        catch (err) {
+	            switch (err.code) {
+	                case 'ENOENT': {
+	                    yield mkdirP(path.dirname(fsPath), maxDepth, depth + 1);
+	                    yield exports.mkdir(fsPath);
+	                    return;
+	                }
+	                default: {
+	                    let stats;
+	                    try {
+	                        stats = yield exports.stat(fsPath);
+	                    }
+	                    catch (err2) {
+	                        throw err;
+	                    }
+	                    if (!stats.isDirectory())
+	                        throw err;
+	                }
+	            }
+	        }
+	    });
+	}
+	exports.mkdirP = mkdirP;
+	/**
+	 * Best effort attempt to determine whether a file exists and is executable.
+	 * @param filePath    file path to check
+	 * @param extensions  additional file extensions to try
+	 * @return if file exists and is executable, returns the file path. otherwise empty string.
+	 */
+	function tryGetExecutablePath(filePath, extensions) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        let stats = undefined;
+	        try {
+	            // test file exists
+	            stats = yield exports.stat(filePath);
+	        }
+	        catch (err) {
+	            if (err.code !== 'ENOENT') {
+	                // eslint-disable-next-line no-console
+	                console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+	            }
+	        }
+	        if (stats && stats.isFile()) {
+	            if (exports.IS_WINDOWS) {
+	                // on Windows, test for valid extension
+	                const upperExt = path.extname(filePath).toUpperCase();
+	                if (extensions.some(validExt => validExt.toUpperCase() === upperExt)) {
+	                    return filePath;
+	                }
+	            }
+	            else {
+	                if (isUnixExecutable(stats)) {
+	                    return filePath;
+	                }
+	            }
+	        }
+	        // try each extension
+	        const originalFilePath = filePath;
+	        for (const extension of extensions) {
+	            filePath = originalFilePath + extension;
+	            stats = undefined;
+	            try {
+	                stats = yield exports.stat(filePath);
+	            }
+	            catch (err) {
+	                if (err.code !== 'ENOENT') {
+	                    // eslint-disable-next-line no-console
+	                    console.log(`Unexpected error attempting to determine if executable file exists '${filePath}': ${err}`);
+	                }
+	            }
+	            if (stats && stats.isFile()) {
+	                if (exports.IS_WINDOWS) {
+	                    // preserve the case of the actual file (since an extension was appended)
+	                    try {
+	                        const directory = path.dirname(filePath);
+	                        const upperName = path.basename(filePath).toUpperCase();
+	                        for (const actualName of yield exports.readdir(directory)) {
+	                            if (upperName === actualName.toUpperCase()) {
+	                                filePath = path.join(directory, actualName);
+	                                break;
+	                            }
+	                        }
+	                    }
+	                    catch (err) {
+	                        // eslint-disable-next-line no-console
+	                        console.log(`Unexpected error attempting to determine the actual case of the file '${filePath}': ${err}`);
+	                    }
+	                    return filePath;
+	                }
+	                else {
+	                    if (isUnixExecutable(stats)) {
+	                        return filePath;
+	                    }
+	                }
+	            }
+	        }
+	        return '';
+	    });
+	}
+	exports.tryGetExecutablePath = tryGetExecutablePath;
+	function normalizeSeparators(p) {
+	    p = p || '';
+	    if (exports.IS_WINDOWS) {
+	        // convert slashes on Windows
+	        p = p.replace(/\//g, '\\');
+	        // remove redundant slashes
+	        return p.replace(/\\\\+/g, '\\');
+	    }
+	    // remove redundant slashes
+	    return p.replace(/\/\/+/g, '/');
+	}
+	// on Mac/Linux, test the execute bit
+	//     R   W  X  R  W X R W X
+	//   256 128 64 32 16 8 4 2 1
+	function isUnixExecutable(stats) {
+	    return ((stats.mode & 1) > 0 ||
+	        ((stats.mode & 8) > 0 && stats.gid === process.getgid()) ||
+	        ((stats.mode & 64) > 0 && stats.uid === process.getuid()));
+	}
+	
+} (ioUtil$2));
+
+var __awaiter$2 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+var __importStar$4 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(io$1, "__esModule", { value: true });
+const childProcess = __importStar$4(require$$0$3);
+const path$e = __importStar$4(require$$1);
+const util_1 = require$$2;
+const ioUtil$1 = __importStar$4(ioUtil$2);
+const exec$1 = util_1.promisify(childProcess.exec);
+/**
+ * Copies a file or folder.
+ * Based off of shelljs - https://github.com/shelljs/shelljs/blob/9237f66c52e5daa40458f94f9565e18e8132f5a6/src/cp.js
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See CopyOptions.
+ */
+function cp(source, dest, options = {}) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        const { force, recursive } = readCopyOptions(options);
+        const destStat = (yield ioUtil$1.exists(dest)) ? yield ioUtil$1.stat(dest) : null;
+        // Dest is an existing file, but not forcing
+        if (destStat && destStat.isFile() && !force) {
+            return;
+        }
+        // If dest is an existing directory, should copy inside.
+        const newDest = destStat && destStat.isDirectory()
+            ? path$e.join(dest, path$e.basename(source))
+            : dest;
+        if (!(yield ioUtil$1.exists(source))) {
+            throw new Error(`no such file or directory: ${source}`);
+        }
+        const sourceStat = yield ioUtil$1.stat(source);
+        if (sourceStat.isDirectory()) {
+            if (!recursive) {
+                throw new Error(`Failed to copy. ${source} is a directory, but tried to copy without recursive flag.`);
+            }
+            else {
+                yield cpDirRecursive(source, newDest, 0, force);
+            }
+        }
+        else {
+            if (path$e.relative(source, newDest) === '') {
+                // a file cannot be copied to itself
+                throw new Error(`'${newDest}' and '${source}' are the same file`);
+            }
+            yield copyFile$2(source, newDest, force);
+        }
+    });
+}
+io$1.cp = cp;
+/**
+ * Moves a path.
+ *
+ * @param     source    source path
+ * @param     dest      destination path
+ * @param     options   optional. See MoveOptions.
+ */
+function mv(source, dest, options = {}) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        if (yield ioUtil$1.exists(dest)) {
+            let destExists = true;
+            if (yield ioUtil$1.isDirectory(dest)) {
+                // If dest is directory copy src into dest
+                dest = path$e.join(dest, path$e.basename(source));
+                destExists = yield ioUtil$1.exists(dest);
+            }
+            if (destExists) {
+                if (options.force == null || options.force) {
+                    yield rmRF(dest);
+                }
+                else {
+                    throw new Error('Destination already exists');
+                }
+            }
+        }
+        yield mkdirP(path$e.dirname(dest));
+        yield ioUtil$1.rename(source, dest);
+    });
+}
+io$1.mv = mv;
+/**
+ * Remove a path recursively with force
+ *
+ * @param inputPath path to remove
+ */
+function rmRF(inputPath) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        if (ioUtil$1.IS_WINDOWS) {
+            // Node doesn't provide a delete operation, only an unlink function. This means that if the file is being used by another
+            // program (e.g. antivirus), it won't be deleted. To address this, we shell out the work to rd/del.
+            try {
+                if (yield ioUtil$1.isDirectory(inputPath, true)) {
+                    yield exec$1(`rd /s /q "${inputPath}"`);
+                }
+                else {
+                    yield exec$1(`del /f /a "${inputPath}"`);
+                }
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+            }
+            // Shelling out fails to remove a symlink folder with missing source, this unlink catches that
+            try {
+                yield ioUtil$1.unlink(inputPath);
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+            }
+        }
+        else {
+            let isDir = false;
+            try {
+                isDir = yield ioUtil$1.isDirectory(inputPath);
+            }
+            catch (err) {
+                // if you try to delete a file that doesn't exist, desired result is achieved
+                // other errors are valid
+                if (err.code !== 'ENOENT')
+                    throw err;
+                return;
+            }
+            if (isDir) {
+                yield exec$1(`rm -rf "${inputPath}"`);
+            }
+            else {
+                yield ioUtil$1.unlink(inputPath);
+            }
+        }
+    });
+}
+io$1.rmRF = rmRF;
+/**
+ * Make a directory.  Creates the full path with folders in between
+ * Will throw if it fails
+ *
+ * @param   fsPath        path to create
+ * @returns Promise<void>
+ */
+function mkdirP(fsPath) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        yield ioUtil$1.mkdirP(fsPath);
+    });
+}
+io$1.mkdirP = mkdirP;
+/**
+ * Returns path of a tool had the tool actually been invoked.  Resolves via paths.
+ * If you check and the tool does not exist, it will throw.
+ *
+ * @param     tool              name of the tool
+ * @param     check             whether to check if tool exists
+ * @returns   Promise<string>   path to tool
+ */
+function which(tool, check) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // recursive when check=true
+        if (check) {
+            const result = yield which(tool, false);
+            if (!result) {
+                if (ioUtil$1.IS_WINDOWS) {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also verify the file has a valid extension for an executable file.`);
+                }
+                else {
+                    throw new Error(`Unable to locate executable file: ${tool}. Please verify either the file path exists or the file can be found within a directory specified by the PATH environment variable. Also check the file mode to verify the file is executable.`);
+                }
+            }
+            return result;
+        }
+        const matches = yield findInPath(tool);
+        if (matches && matches.length > 0) {
+            return matches[0];
+        }
+        return '';
+    });
+}
+io$1.which = which;
+/**
+ * Returns a list of all occurrences of the given tool on the system path.
+ *
+ * @returns   Promise<string[]>  the paths of the tool
+ */
+function findInPath(tool) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        if (!tool) {
+            throw new Error("parameter 'tool' is required");
+        }
+        // build the list of extensions to try
+        const extensions = [];
+        if (ioUtil$1.IS_WINDOWS && process.env['PATHEXT']) {
+            for (const extension of process.env['PATHEXT'].split(path$e.delimiter)) {
+                if (extension) {
+                    extensions.push(extension);
+                }
+            }
+        }
+        // if it's rooted, return it if exists. otherwise return empty.
+        if (ioUtil$1.isRooted(tool)) {
+            const filePath = yield ioUtil$1.tryGetExecutablePath(tool, extensions);
+            if (filePath) {
+                return [filePath];
+            }
+            return [];
+        }
+        // if any path separators, return empty
+        if (tool.includes(path$e.sep)) {
+            return [];
+        }
+        // build the list of directories
+        //
+        // Note, technically "where" checks the current directory on Windows. From a toolkit perspective,
+        // it feels like we should not do this. Checking the current directory seems like more of a use
+        // case of a shell, and the which() function exposed by the toolkit should strive for consistency
+        // across platforms.
+        const directories = [];
+        if (process.env.PATH) {
+            for (const p of process.env.PATH.split(path$e.delimiter)) {
+                if (p) {
+                    directories.push(p);
+                }
+            }
+        }
+        // find all matches
+        const matches = [];
+        for (const directory of directories) {
+            const filePath = yield ioUtil$1.tryGetExecutablePath(path$e.join(directory, tool), extensions);
+            if (filePath) {
+                matches.push(filePath);
+            }
+        }
+        return matches;
+    });
+}
+io$1.findInPath = findInPath;
+function readCopyOptions(options) {
+    const force = options.force == null ? true : options.force;
+    const recursive = Boolean(options.recursive);
+    return { force, recursive };
+}
+function cpDirRecursive(sourceDir, destDir, currentDepth, force) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        // Ensure there is not a run away recursive copy
+        if (currentDepth >= 255)
+            return;
+        currentDepth++;
+        yield mkdirP(destDir);
+        const files = yield ioUtil$1.readdir(sourceDir);
+        for (const fileName of files) {
+            const srcFile = `${sourceDir}/${fileName}`;
+            const destFile = `${destDir}/${fileName}`;
+            const srcFileStat = yield ioUtil$1.lstat(srcFile);
+            if (srcFileStat.isDirectory()) {
+                // Recurse
+                yield cpDirRecursive(srcFile, destFile, currentDepth, force);
+            }
+            else {
+                yield copyFile$2(srcFile, destFile, force);
+            }
+        }
+        // Change the mode for the newly created directory
+        yield ioUtil$1.chmod(destDir, (yield ioUtil$1.stat(sourceDir)).mode);
+    });
+}
+// Buffered file copy
+function copyFile$2(srcFile, destFile, force) {
+    return __awaiter$2(this, void 0, void 0, function* () {
+        if ((yield ioUtil$1.lstat(srcFile)).isSymbolicLink()) {
+            // unlink/re-link it
+            try {
+                yield ioUtil$1.lstat(destFile);
+                yield ioUtil$1.unlink(destFile);
+            }
+            catch (e) {
+                // Try to override file permission
+                if (e.code === 'EPERM') {
+                    yield ioUtil$1.chmod(destFile, '0666');
+                    yield ioUtil$1.unlink(destFile);
+                }
+                // other errors = it doesn't exist, no work to do
+            }
+            // Copy over symlink
+            const symlinkFull = yield ioUtil$1.readlink(srcFile);
+            yield ioUtil$1.symlink(symlinkFull, destFile, ioUtil$1.IS_WINDOWS ? 'junction' : null);
+        }
+        else if (!(yield ioUtil$1.exists(destFile)) || force) {
+            yield ioUtil$1.copyFile(srcFile, destFile);
+        }
+    });
+}
+
+var __createBinding$1 = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault$1 = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar$3 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding$1(result, mod, k);
+    __setModuleDefault$1(result, mod);
+    return result;
+};
+var __awaiter$1 = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(toolrunner, "__esModule", { value: true });
+toolrunner.argStringToArray = toolrunner.ToolRunner = void 0;
+const os$2 = __importStar$3(require$$0$4);
+const events = __importStar$3(events$1.exports);
+const child = __importStar$3(require$$0$3);
+const path$d = __importStar$3(require$$1);
+const io = __importStar$3(io$1);
+const ioUtil = __importStar$3(ioUtil$2);
+const timers_1 = require$$6;
+/* eslint-disable @typescript-eslint/unbound-method */
+const IS_WINDOWS = process.platform === 'win32';
+/*
+ * Class for running command line tools. Handles quoting and arg parsing in a platform agnostic way.
+ */
+class ToolRunner extends events.EventEmitter {
+    constructor(toolPath, args, options) {
+        super();
+        if (!toolPath) {
+            throw new Error("Parameter 'toolPath' cannot be null or empty.");
+        }
+        this.toolPath = toolPath;
+        this.args = args || [];
+        this.options = options || {};
+    }
+    _debug(message) {
+        if (this.options.listeners && this.options.listeners.debug) {
+            this.options.listeners.debug(message);
+        }
+    }
+    _getCommandString(options, noPrefix) {
+        const toolPath = this._getSpawnFileName();
+        const args = this._getSpawnArgs(options);
+        let cmd = noPrefix ? '' : '[command]'; // omit prefix when piped to a second tool
+        if (IS_WINDOWS) {
+            // Windows + cmd file
+            if (this._isCmdFile()) {
+                cmd += toolPath;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows + verbatim
+            else if (options.windowsVerbatimArguments) {
+                cmd += `"${toolPath}"`;
+                for (const a of args) {
+                    cmd += ` ${a}`;
+                }
+            }
+            // Windows (regular)
+            else {
+                cmd += this._windowsQuoteCmdArg(toolPath);
+                for (const a of args) {
+                    cmd += ` ${this._windowsQuoteCmdArg(a)}`;
+                }
+            }
+        }
+        else {
+            // OSX/Linux - this can likely be improved with some form of quoting.
+            // creating processes on Unix is fundamentally different than Windows.
+            // on Unix, execvp() takes an arg array.
+            cmd += toolPath;
+            for (const a of args) {
+                cmd += ` ${a}`;
+            }
+        }
+        return cmd;
+    }
+    _processLineBuffer(data, strBuffer, onLine) {
+        try {
+            let s = strBuffer + data.toString();
+            let n = s.indexOf(os$2.EOL);
+            while (n > -1) {
+                const line = s.substring(0, n);
+                onLine(line);
+                // the rest of the string ...
+                s = s.substring(n + os$2.EOL.length);
+                n = s.indexOf(os$2.EOL);
+            }
+            return s;
+        }
+        catch (err) {
+            // streaming lines to console is best effort.  Don't fail a build.
+            this._debug(`error processing line. Failed with error ${err}`);
+            return '';
+        }
+    }
+    _getSpawnFileName() {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                return process.env['COMSPEC'] || 'cmd.exe';
+            }
+        }
+        return this.toolPath;
+    }
+    _getSpawnArgs(options) {
+        if (IS_WINDOWS) {
+            if (this._isCmdFile()) {
+                let argline = `/D /S /C "${this._windowsQuoteCmdArg(this.toolPath)}`;
+                for (const a of this.args) {
+                    argline += ' ';
+                    argline += options.windowsVerbatimArguments
+                        ? a
+                        : this._windowsQuoteCmdArg(a);
+                }
+                argline += '"';
+                return [argline];
+            }
+        }
+        return this.args;
+    }
+    _endsWith(str, end) {
+        return str.endsWith(end);
+    }
+    _isCmdFile() {
+        const upperToolPath = this.toolPath.toUpperCase();
+        return (this._endsWith(upperToolPath, '.CMD') ||
+            this._endsWith(upperToolPath, '.BAT'));
+    }
+    _windowsQuoteCmdArg(arg) {
+        // for .exe, apply the normal quoting rules that libuv applies
+        if (!this._isCmdFile()) {
+            return this._uvQuoteCmdArg(arg);
+        }
+        // otherwise apply quoting rules specific to the cmd.exe command line parser.
+        // the libuv rules are generic and are not designed specifically for cmd.exe
+        // command line parser.
+        //
+        // for a detailed description of the cmd.exe command line parser, refer to
+        // http://stackoverflow.com/questions/4094699/how-does-the-windows-command-interpreter-cmd-exe-parse-scripts/7970912#7970912
+        // need quotes for empty arg
+        if (!arg) {
+            return '""';
+        }
+        // determine whether the arg needs to be quoted
+        const cmdSpecialChars = [
+            ' ',
+            '\t',
+            '&',
+            '(',
+            ')',
+            '[',
+            ']',
+            '{',
+            '}',
+            '^',
+            '=',
+            ';',
+            '!',
+            "'",
+            '+',
+            ',',
+            '`',
+            '~',
+            '|',
+            '<',
+            '>',
+            '"'
+        ];
+        let needsQuotes = false;
+        for (const char of arg) {
+            if (cmdSpecialChars.some(x => x === char)) {
+                needsQuotes = true;
+                break;
+            }
+        }
+        // short-circuit if quotes not needed
+        if (!needsQuotes) {
+            return arg;
+        }
+        // the following quoting rules are very similar to the rules that by libuv applies.
+        //
+        // 1) wrap the string in quotes
+        //
+        // 2) double-up quotes - i.e. " => ""
+        //
+        //    this is different from the libuv quoting rules. libuv replaces " with \", which unfortunately
+        //    doesn't work well with a cmd.exe command line.
+        //
+        //    note, replacing " with "" also works well if the arg is passed to a downstream .NET console app.
+        //    for example, the command line:
+        //          foo.exe "myarg:""my val"""
+        //    is parsed by a .NET console app into an arg array:
+        //          [ "myarg:\"my val\"" ]
+        //    which is the same end result when applying libuv quoting rules. although the actual
+        //    command line from libuv quoting rules would look like:
+        //          foo.exe "myarg:\"my val\""
+        //
+        // 3) double-up slashes that precede a quote,
+        //    e.g.  hello \world    => "hello \world"
+        //          hello\"world    => "hello\\""world"
+        //          hello\\"world   => "hello\\\\""world"
+        //          hello world\    => "hello world\\"
+        //
+        //    technically this is not required for a cmd.exe command line, or the batch argument parser.
+        //    the reasons for including this as a .cmd quoting rule are:
+        //
+        //    a) this is optimized for the scenario where the argument is passed from the .cmd file to an
+        //       external program. many programs (e.g. .NET console apps) rely on the slash-doubling rule.
+        //
+        //    b) it's what we've been doing previously (by deferring to node default behavior) and we
+        //       haven't heard any complaints about that aspect.
+        //
+        // note, a weakness of the quoting rules chosen here, is that % is not escaped. in fact, % cannot be
+        // escaped when used on the command line directly - even though within a .cmd file % can be escaped
+        // by using %%.
+        //
+        // the saving grace is, on the command line, %var% is left as-is if var is not defined. this contrasts
+        // the line parsing rules within a .cmd file, where if var is not defined it is replaced with nothing.
+        //
+        // one option that was explored was replacing % with ^% - i.e. %var% => ^%var^%. this hack would
+        // often work, since it is unlikely that var^ would exist, and the ^ character is removed when the
+        // variable is used. the problem, however, is that ^ is not removed when %* is used to pass the args
+        // to an external program.
+        //
+        // an unexplored potential solution for the % escaping problem, is to create a wrapper .cmd file.
+        // % can be escaped within a .cmd file.
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\'; // double the slash
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '"'; // double the quote
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _uvQuoteCmdArg(arg) {
+        // Tool runner wraps child_process.spawn() and needs to apply the same quoting as
+        // Node in certain cases where the undocumented spawn option windowsVerbatimArguments
+        // is used.
+        //
+        // Since this function is a port of quote_cmd_arg from Node 4.x (technically, lib UV,
+        // see https://github.com/nodejs/node/blob/v4.x/deps/uv/src/win/process.c for details),
+        // pasting copyright notice from Node within this function:
+        //
+        //      Copyright Joyent, Inc. and other Node contributors. All rights reserved.
+        //
+        //      Permission is hereby granted, free of charge, to any person obtaining a copy
+        //      of this software and associated documentation files (the "Software"), to
+        //      deal in the Software without restriction, including without limitation the
+        //      rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+        //      sell copies of the Software, and to permit persons to whom the Software is
+        //      furnished to do so, subject to the following conditions:
+        //
+        //      The above copyright notice and this permission notice shall be included in
+        //      all copies or substantial portions of the Software.
+        //
+        //      THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+        //      IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+        //      FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+        //      AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+        //      LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+        //      FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+        //      IN THE SOFTWARE.
+        if (!arg) {
+            // Need double quotation for empty argument
+            return '""';
+        }
+        if (!arg.includes(' ') && !arg.includes('\t') && !arg.includes('"')) {
+            // No quotation needed
+            return arg;
+        }
+        if (!arg.includes('"') && !arg.includes('\\')) {
+            // No embedded double quotes or backslashes, so I can just wrap
+            // quote marks around the whole thing.
+            return `"${arg}"`;
+        }
+        // Expected input/output:
+        //   input : hello"world
+        //   output: "hello\"world"
+        //   input : hello""world
+        //   output: "hello\"\"world"
+        //   input : hello\world
+        //   output: hello\world
+        //   input : hello\\world
+        //   output: hello\\world
+        //   input : hello\"world
+        //   output: "hello\\\"world"
+        //   input : hello\\"world
+        //   output: "hello\\\\\"world"
+        //   input : hello world\
+        //   output: "hello world\\" - note the comment in libuv actually reads "hello world\"
+        //                             but it appears the comment is wrong, it should be "hello world\\"
+        let reverse = '"';
+        let quoteHit = true;
+        for (let i = arg.length; i > 0; i--) {
+            // walk the string in reverse
+            reverse += arg[i - 1];
+            if (quoteHit && arg[i - 1] === '\\') {
+                reverse += '\\';
+            }
+            else if (arg[i - 1] === '"') {
+                quoteHit = true;
+                reverse += '\\';
+            }
+            else {
+                quoteHit = false;
+            }
+        }
+        reverse += '"';
+        return reverse
+            .split('')
+            .reverse()
+            .join('');
+    }
+    _cloneExecOptions(options) {
+        options = options || {};
+        const result = {
+            cwd: options.cwd || process.cwd(),
+            env: options.env || process.env,
+            silent: options.silent || false,
+            windowsVerbatimArguments: options.windowsVerbatimArguments || false,
+            failOnStdErr: options.failOnStdErr || false,
+            ignoreReturnCode: options.ignoreReturnCode || false,
+            delay: options.delay || 10000
+        };
+        result.outStream = options.outStream || process.stdout;
+        result.errStream = options.errStream || process.stderr;
+        return result;
+    }
+    _getSpawnOptions(options, toolPath) {
+        options = options || {};
+        const result = {};
+        result.cwd = options.cwd;
+        result.env = options.env;
+        result['windowsVerbatimArguments'] =
+            options.windowsVerbatimArguments || this._isCmdFile();
+        if (options.windowsVerbatimArguments) {
+            result.argv0 = `"${toolPath}"`;
+        }
+        return result;
+    }
+    /**
+     * Exec a tool.
+     * Output will be streamed to the live console.
+     * Returns promise with return code
+     *
+     * @param     tool     path to tool to exec
+     * @param     options  optional exec options.  See ExecOptions
+     * @returns   number
+     */
+    exec() {
+        return __awaiter$1(this, void 0, void 0, function* () {
+            // root the tool path if it is unrooted and contains relative pathing
+            if (!ioUtil.isRooted(this.toolPath) &&
+                (this.toolPath.includes('/') ||
+                    (IS_WINDOWS && this.toolPath.includes('\\')))) {
+                // prefer options.cwd if it is specified, however options.cwd may also need to be rooted
+                this.toolPath = path$d.resolve(process.cwd(), this.options.cwd || process.cwd(), this.toolPath);
+            }
+            // if the tool is only a file name, then resolve it from the PATH
+            // otherwise verify it exists (add extension on Windows if necessary)
+            this.toolPath = yield io.which(this.toolPath, true);
+            return new Promise((resolve, reject) => __awaiter$1(this, void 0, void 0, function* () {
+                this._debug(`exec tool: ${this.toolPath}`);
+                this._debug('arguments:');
+                for (const arg of this.args) {
+                    this._debug(`   ${arg}`);
+                }
+                const optionsNonNull = this._cloneExecOptions(this.options);
+                if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                    optionsNonNull.outStream.write(this._getCommandString(optionsNonNull) + os$2.EOL);
+                }
+                const state = new ExecState(optionsNonNull, this.toolPath);
+                state.on('debug', (message) => {
+                    this._debug(message);
+                });
+                if (this.options.cwd && !(yield ioUtil.exists(this.options.cwd))) {
+                    return reject(new Error(`The cwd: ${this.options.cwd} does not exist!`));
+                }
+                const fileName = this._getSpawnFileName();
+                const cp = child.spawn(fileName, this._getSpawnArgs(optionsNonNull), this._getSpawnOptions(this.options, fileName));
+                let stdbuffer = '';
+                if (cp.stdout) {
+                    cp.stdout.on('data', (data) => {
+                        if (this.options.listeners && this.options.listeners.stdout) {
+                            this.options.listeners.stdout(data);
+                        }
+                        if (!optionsNonNull.silent && optionsNonNull.outStream) {
+                            optionsNonNull.outStream.write(data);
+                        }
+                        stdbuffer = this._processLineBuffer(data, stdbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.stdline) {
+                                this.options.listeners.stdline(line);
+                            }
+                        });
+                    });
+                }
+                let errbuffer = '';
+                if (cp.stderr) {
+                    cp.stderr.on('data', (data) => {
+                        state.processStderr = true;
+                        if (this.options.listeners && this.options.listeners.stderr) {
+                            this.options.listeners.stderr(data);
+                        }
+                        if (!optionsNonNull.silent &&
+                            optionsNonNull.errStream &&
+                            optionsNonNull.outStream) {
+                            const s = optionsNonNull.failOnStdErr
+                                ? optionsNonNull.errStream
+                                : optionsNonNull.outStream;
+                            s.write(data);
+                        }
+                        errbuffer = this._processLineBuffer(data, errbuffer, (line) => {
+                            if (this.options.listeners && this.options.listeners.errline) {
+                                this.options.listeners.errline(line);
+                            }
+                        });
+                    });
+                }
+                cp.on('error', (err) => {
+                    state.processError = err.message;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    state.CheckComplete();
+                });
+                cp.on('exit', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    this._debug(`Exit code ${code} received from tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                cp.on('close', (code) => {
+                    state.processExitCode = code;
+                    state.processExited = true;
+                    state.processClosed = true;
+                    this._debug(`STDIO streams have closed for tool '${this.toolPath}'`);
+                    state.CheckComplete();
+                });
+                state.on('done', (error, exitCode) => {
+                    if (stdbuffer.length > 0) {
+                        this.emit('stdline', stdbuffer);
+                    }
+                    if (errbuffer.length > 0) {
+                        this.emit('errline', errbuffer);
+                    }
+                    cp.removeAllListeners();
+                    if (error) {
+                        reject(error);
+                    }
+                    else {
+                        resolve(exitCode);
+                    }
+                });
+                if (this.options.input) {
+                    if (!cp.stdin) {
+                        throw new Error('child process missing stdin');
+                    }
+                    cp.stdin.end(this.options.input);
+                }
+            }));
+        });
+    }
+}
+toolrunner.ToolRunner = ToolRunner;
+/**
+ * Convert an arg string to an array of args. Handles escaping
+ *
+ * @param    argString   string of arguments
+ * @returns  string[]    array of arguments
+ */
+function argStringToArray(argString) {
+    const args = [];
+    let inQuotes = false;
+    let escaped = false;
+    let arg = '';
+    function append(c) {
+        // we only escape double quotes.
+        if (escaped && c !== '"') {
+            arg += '\\';
+        }
+        arg += c;
+        escaped = false;
+    }
+    for (let i = 0; i < argString.length; i++) {
+        const c = argString.charAt(i);
+        if (c === '"') {
+            if (!escaped) {
+                inQuotes = !inQuotes;
+            }
+            else {
+                append(c);
+            }
+            continue;
+        }
+        if (c === '\\' && escaped) {
+            append(c);
+            continue;
+        }
+        if (c === '\\' && inQuotes) {
+            escaped = true;
+            continue;
+        }
+        if (c === ' ' && !inQuotes) {
+            if (arg.length > 0) {
+                args.push(arg);
+                arg = '';
+            }
+            continue;
+        }
+        append(c);
+    }
+    if (arg.length > 0) {
+        args.push(arg.trim());
+    }
+    return args;
+}
+toolrunner.argStringToArray = argStringToArray;
+class ExecState extends events.EventEmitter {
+    constructor(options, toolPath) {
+        super();
+        this.processClosed = false; // tracks whether the process has exited and stdio is closed
+        this.processError = '';
+        this.processExitCode = 0;
+        this.processExited = false; // tracks whether the process has exited
+        this.processStderr = false; // tracks whether stderr was written to
+        this.delay = 10000; // 10 seconds
+        this.done = false;
+        this.timeout = null;
+        if (!toolPath) {
+            throw new Error('toolPath must not be empty');
+        }
+        this.options = options;
+        this.toolPath = toolPath;
+        if (options.delay) {
+            this.delay = options.delay;
+        }
+    }
+    CheckComplete() {
+        if (this.done) {
+            return;
+        }
+        if (this.processClosed) {
+            this._setResult();
+        }
+        else if (this.processExited) {
+            this.timeout = timers_1.setTimeout(ExecState.HandleTimeout, this.delay, this);
+        }
+    }
+    _debug(message) {
+        this.emit('debug', message);
+    }
+    _setResult() {
+        // determine whether there is an error
+        let error;
+        if (this.processExited) {
+            if (this.processError) {
+                error = new Error(`There was an error when attempting to execute the process '${this.toolPath}'. This may indicate the process failed to start. Error: ${this.processError}`);
+            }
+            else if (this.processExitCode !== 0 && !this.options.ignoreReturnCode) {
+                error = new Error(`The process '${this.toolPath}' failed with exit code ${this.processExitCode}`);
+            }
+            else if (this.processStderr && this.options.failOnStdErr) {
+                error = new Error(`The process '${this.toolPath}' failed because one or more lines were written to the STDERR stream`);
+            }
+        }
+        // clear the timeout
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+            this.timeout = null;
+        }
+        this.done = true;
+        this.emit('done', error, this.processExitCode);
+    }
+    static HandleTimeout(state) {
+        if (state.done) {
+            return;
+        }
+        if (!state.processClosed && state.processExited) {
+            const message = `The STDIO streams did not close within ${state.delay /
+                1000} seconds of the exit event from process '${state.toolPath}'. This may indicate a child process inherited the STDIO streams and has not yet exited.`;
+            state._debug(message);
+        }
+        state._setResult();
+    }
+}
+
+var __createBinding = (commonjsGlobal && commonjsGlobal.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (commonjsGlobal && commonjsGlobal.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar$2 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
+Object.defineProperty(exec$2, "__esModule", { value: true });
+exec$2.getExecOutput = exec$2.exec = void 0;
+const string_decoder_1 = string_decoder;
+const tr = __importStar$2(toolrunner);
+/**
+ * Exec a command.
+ * Output will be streamed to the live console.
+ * Returns promise with return code
+ *
+ * @param     commandLine        command to execute (can include additional args). Must be correctly escaped.
+ * @param     args               optional arguments for tool. Escaping is handled by the lib.
+ * @param     options            optional exec options.  See ExecOptions
+ * @returns   Promise<number>    exit code
+ */
+function exec(commandLine, args, options) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const commandArgs = tr.argStringToArray(commandLine);
+        if (commandArgs.length === 0) {
+            throw new Error(`Parameter 'commandLine' cannot be null or empty.`);
+        }
+        // Path to tool to execute should be first arg
+        const toolPath = commandArgs[0];
+        args = commandArgs.slice(1).concat(args || []);
+        const runner = new tr.ToolRunner(toolPath, args, options);
+        return runner.exec();
+    });
+}
+exec$2.exec = exec;
+/**
+ * Exec a command and get the output.
+ * Output will be streamed to the live console.
+ * Returns promise with the exit code and collected stdout and stderr
+ *
+ * @param     commandLine           command to execute (can include additional args). Must be correctly escaped.
+ * @param     args                  optional arguments for tool. Escaping is handled by the lib.
+ * @param     options               optional exec options.  See ExecOptions
+ * @returns   Promise<ExecOutput>   exit code, stdout, and stderr
+ */
+function getExecOutput(commandLine, args, options) {
+    var _a, _b;
+    return __awaiter(this, void 0, void 0, function* () {
+        let stdout = '';
+        let stderr = '';
+        //Using string decoder covers the case where a mult-byte character is split
+        const stdoutDecoder = new string_decoder_1.StringDecoder('utf8');
+        const stderrDecoder = new string_decoder_1.StringDecoder('utf8');
+        const originalStdoutListener = (_a = options === null || options === void 0 ? void 0 : options.listeners) === null || _a === void 0 ? void 0 : _a.stdout;
+        const originalStdErrListener = (_b = options === null || options === void 0 ? void 0 : options.listeners) === null || _b === void 0 ? void 0 : _b.stderr;
+        const stdErrListener = (data) => {
+            stderr += stderrDecoder.write(data);
+            if (originalStdErrListener) {
+                originalStdErrListener(data);
+            }
+        };
+        const stdOutListener = (data) => {
+            stdout += stdoutDecoder.write(data);
+            if (originalStdoutListener) {
+                originalStdoutListener(data);
+            }
+        };
+        const listeners = Object.assign(Object.assign({}, options === null || options === void 0 ? void 0 : options.listeners), { stdout: stdOutListener, stderr: stdErrListener });
+        const exitCode = yield exec(commandLine, args, Object.assign(Object.assign({}, options), { listeners }));
+        //flush any remaining characters
+        stdout += stdoutDecoder.end();
+        stderr += stderrDecoder.end();
+        return {
+            exitCode,
+            stdout,
+            stderr
+        };
+    });
+}
+exec$2.getExecOutput = getExecOutput;
+
+const cmd = (cmd, args) => __awaiter$3(void 0, void 0, void 0, function* () {
+    let myOutput = "";
+    let myError = "";
+    const options = {};
+    options.listeners = {
+        stdout: (data) => {
+            myOutput += data.toString();
+        },
+        stderr: (data) => {
+            myError += data.toString();
+        },
+    };
+    options.cwd = "./lib";
+    yield exec$2.exec(cmd, args, options);
+    return myOutput;
+});
+
+var core = {};
+
+var command = {};
+
+var utils$3 = {};
+
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+Object.defineProperty(utils$3, "__esModule", { value: true });
+/**
+ * Sanitizes an input into a string so it can be passed into issueCommand safely
+ * @param input input to sanitize into a string
+ */
+function toCommandValue(input) {
+    if (input === null || input === undefined) {
+        return '';
+    }
+    else if (typeof input === 'string' || input instanceof String) {
+        return input;
+    }
+    return JSON.stringify(input);
+}
+utils$3.toCommandValue = toCommandValue;
+
+var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(command, "__esModule", { value: true });
+const os$1 = __importStar$1(require$$0$4);
+const utils_1$1 = utils$3;
+/**
+ * Commands
+ *
+ * Command Format:
+ *   ::name key=value,key=value::message
+ *
+ * Examples:
+ *   ::warning::This is the message
+ *   ::set-env name=MY_VAR::some value
+ */
+function issueCommand$1(command, properties, message) {
+    const cmd = new Command(command, properties, message);
+    process.stdout.write(cmd.toString() + os$1.EOL);
+}
+command.issueCommand = issueCommand$1;
+function issue(name, message = '') {
+    issueCommand$1(name, {}, message);
+}
+command.issue = issue;
+const CMD_STRING = '::';
+class Command {
+    constructor(command, properties, message) {
+        if (!command) {
+            command = 'missing.command';
+        }
+        this.command = command;
+        this.properties = properties;
+        this.message = message;
+    }
+    toString() {
+        let cmdStr = CMD_STRING + this.command;
+        if (this.properties && Object.keys(this.properties).length > 0) {
+            cmdStr += ' ';
+            let first = true;
+            for (const key in this.properties) {
+                if (this.properties.hasOwnProperty(key)) {
+                    const val = this.properties[key];
+                    if (val) {
+                        if (first) {
+                            first = false;
+                        }
+                        else {
+                            cmdStr += ',';
+                        }
+                        cmdStr += `${key}=${escapeProperty(val)}`;
+                    }
+                }
+            }
+        }
+        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
+        return cmdStr;
+    }
+}
+function escapeData(s) {
+    return utils_1$1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A');
+}
+function escapeProperty(s) {
+    return utils_1$1.toCommandValue(s)
+        .replace(/%/g, '%25')
+        .replace(/\r/g, '%0D')
+        .replace(/\n/g, '%0A')
+        .replace(/:/g, '%3A')
+        .replace(/,/g, '%2C');
+}
+
+var fileCommand = {};
+
+// For internal use, subject to change.
+var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+    result["default"] = mod;
+    return result;
+};
+Object.defineProperty(fileCommand, "__esModule", { value: true });
+// We use any as a valid input type
+/* eslint-disable @typescript-eslint/no-explicit-any */
+const fs$j = __importStar(require$$0$1);
+const os = __importStar(require$$0$4);
+const utils_1 = utils$3;
+function issueCommand(command, message) {
+    const filePath = process.env[`GITHUB_${command}`];
+    if (!filePath) {
+        throw new Error(`Unable to find environment variable for file command ${command}`);
+    }
+    if (!fs$j.existsSync(filePath)) {
+        throw new Error(`Missing file at path: ${filePath}`);
+    }
+    fs$j.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
+        encoding: 'utf8'
+    });
+}
+fileCommand.issueCommand = issueCommand;
+
+(function (exports) {
+	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
+	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+	    return new (P || (P = Promise))(function (resolve, reject) {
+	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+	        step((generator = generator.apply(thisArg, _arguments || [])).next());
+	    });
+	};
+	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
+	    if (mod && mod.__esModule) return mod;
+	    var result = {};
+	    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
+	    result["default"] = mod;
+	    return result;
+	};
+	Object.defineProperty(exports, "__esModule", { value: true });
+	const command_1 = command;
+	const file_command_1 = fileCommand;
+	const utils_1 = utils$3;
+	const os = __importStar(require$$0$4);
+	const path = __importStar(require$$1);
+	/**
+	 * The code to exit an action
+	 */
+	var ExitCode;
+	(function (ExitCode) {
+	    /**
+	     * A code indicating that the action was successful
+	     */
+	    ExitCode[ExitCode["Success"] = 0] = "Success";
+	    /**
+	     * A code indicating that the action was a failure
+	     */
+	    ExitCode[ExitCode["Failure"] = 1] = "Failure";
+	})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
+	//-----------------------------------------------------------------------
+	// Variables
+	//-----------------------------------------------------------------------
+	/**
+	 * Sets env variable for this action and future actions in the job
+	 * @param name the name of the variable to set
+	 * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function exportVariable(name, val) {
+	    const convertedVal = utils_1.toCommandValue(val);
+	    process.env[name] = convertedVal;
+	    const filePath = process.env['GITHUB_ENV'] || '';
+	    if (filePath) {
+	        const delimiter = '_GitHubActionsFileCommandDelimeter_';
+	        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
+	        file_command_1.issueCommand('ENV', commandValue);
+	    }
+	    else {
+	        command_1.issueCommand('set-env', { name }, convertedVal);
+	    }
+	}
+	exports.exportVariable = exportVariable;
+	/**
+	 * Registers a secret which will get masked from logs
+	 * @param secret value of the secret
+	 */
+	function setSecret(secret) {
+	    command_1.issueCommand('add-mask', {}, secret);
+	}
+	exports.setSecret = setSecret;
+	/**
+	 * Prepends inputPath to the PATH (for this action and future actions)
+	 * @param inputPath
+	 */
+	function addPath(inputPath) {
+	    const filePath = process.env['GITHUB_PATH'] || '';
+	    if (filePath) {
+	        file_command_1.issueCommand('PATH', inputPath);
+	    }
+	    else {
+	        command_1.issueCommand('add-path', {}, inputPath);
+	    }
+	    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
+	}
+	exports.addPath = addPath;
+	/**
+	 * Gets the value of an input.  The value is also trimmed.
+	 *
+	 * @param     name     name of the input to get
+	 * @param     options  optional. See InputOptions.
+	 * @returns   string
+	 */
+	function getInput(name, options) {
+	    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
+	    if (options && options.required && !val) {
+	        throw new Error(`Input required and not supplied: ${name}`);
+	    }
+	    return val.trim();
+	}
+	exports.getInput = getInput;
+	/**
+	 * Sets the value of an output.
+	 *
+	 * @param     name     name of the output to set
+	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function setOutput(name, value) {
+	    process.stdout.write(os.EOL);
+	    command_1.issueCommand('set-output', { name }, value);
+	}
+	exports.setOutput = setOutput;
+	/**
+	 * Enables or disables the echoing of commands into stdout for the rest of the step.
+	 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
+	 *
+	 */
+	function setCommandEcho(enabled) {
+	    command_1.issue('echo', enabled ? 'on' : 'off');
+	}
+	exports.setCommandEcho = setCommandEcho;
+	//-----------------------------------------------------------------------
+	// Results
+	//-----------------------------------------------------------------------
+	/**
+	 * Sets the action status to failed.
+	 * When the action exits it will be with an exit code of 1
+	 * @param message add error issue message
+	 */
+	function setFailed(message) {
+	    process.exitCode = ExitCode.Failure;
+	    error(message);
+	}
+	exports.setFailed = setFailed;
+	//-----------------------------------------------------------------------
+	// Logging Commands
+	//-----------------------------------------------------------------------
+	/**
+	 * Gets whether Actions Step Debug is on or not
+	 */
+	function isDebug() {
+	    return process.env['RUNNER_DEBUG'] === '1';
+	}
+	exports.isDebug = isDebug;
+	/**
+	 * Writes debug message to user log
+	 * @param message debug message
+	 */
+	function debug(message) {
+	    command_1.issueCommand('debug', {}, message);
+	}
+	exports.debug = debug;
+	/**
+	 * Adds an error issue
+	 * @param message error issue message. Errors will be converted to string via toString()
+	 */
+	function error(message) {
+	    command_1.issue('error', message instanceof Error ? message.toString() : message);
+	}
+	exports.error = error;
+	/**
+	 * Adds an warning issue
+	 * @param message warning issue message. Errors will be converted to string via toString()
+	 */
+	function warning(message) {
+	    command_1.issue('warning', message instanceof Error ? message.toString() : message);
+	}
+	exports.warning = warning;
+	/**
+	 * Writes info to log with console.log.
+	 * @param message info message
+	 */
+	function info(message) {
+	    process.stdout.write(message + os.EOL);
+	}
+	exports.info = info;
+	/**
+	 * Begin an output group.
+	 *
+	 * Output until the next `groupEnd` will be foldable in this group
+	 *
+	 * @param name The name of the output group
+	 */
+	function startGroup(name) {
+	    command_1.issue('group', name);
+	}
+	exports.startGroup = startGroup;
+	/**
+	 * End an output group.
+	 */
+	function endGroup() {
+	    command_1.issue('endgroup');
+	}
+	exports.endGroup = endGroup;
+	/**
+	 * Wrap an asynchronous function call in a group.
+	 *
+	 * Returns the same type as the function itself.
+	 *
+	 * @param name The name of the group
+	 * @param fn The function to wrap in the group
+	 */
+	function group(name, fn) {
+	    return __awaiter(this, void 0, void 0, function* () {
+	        startGroup(name);
+	        let result;
+	        try {
+	            result = yield fn();
+	        }
+	        finally {
+	            endGroup();
+	        }
+	        return result;
+	    });
+	}
+	exports.group = group;
+	//-----------------------------------------------------------------------
+	// Wrapper action state
+	//-----------------------------------------------------------------------
+	/**
+	 * Saves state for current action, the state can only be retrieved by this action's post job execution.
+	 *
+	 * @param     name     name of the state to store
+	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
+	 */
+	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	function saveState(name, value) {
+	    command_1.issueCommand('save-state', { name }, value);
+	}
+	exports.saveState = saveState;
+	/**
+	 * Gets the value of an state set by this action's main execution.
+	 *
+	 * @param     name     name of the state to get
+	 * @returns   string
+	 */
+	function getState(name) {
+	    return process.env[`STATE_${name}`] || '';
+	}
+	exports.getState = getState;
+	
+} (core));
+
+const log$2 = {
+    error: core.error,
+    info: core.info,
+    warning: core.warning,
+    debug: core.debug,
+};
+
+var fs$i = {};
 
 var universalify$1 = {};
 
@@ -82,7 +2542,7 @@ universalify$1.fromPromise = function (fn) {
   }, 'name', { value: fn.name })
 };
 
-var constants = require$$0;
+var constants = require$$0$5;
 
 var origCwd = process.cwd;
 var cwd = null;
@@ -429,7 +2889,7 @@ function patch$1 (fs) {
   }
 }
 
-var Stream = require$$0$1.Stream;
+var Stream = require$$0$6.Stream;
 
 var legacyStreams = legacy$1;
 
@@ -570,12 +3030,12 @@ function clone$1 (obj) {
   return copy
 }
 
-var fs$i = require$$0$2;
+var fs$h = require$$0$1;
 var polyfills = polyfills$1;
 var legacy = legacyStreams;
 var clone = clone_1;
 
-var util$2 = require$$4;
+var util$2 = require$$2;
 
 /* istanbul ignore next - node 0.x polyfill */
 var gracefulQueue;
@@ -612,18 +3072,18 @@ else if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || ''))
   };
 
 // Once time initialization
-if (!fs$i[gracefulQueue]) {
+if (!fs$h[gracefulQueue]) {
   // This queue can be shared by multiple loaded instances
   var queue = commonjsGlobal[gracefulQueue] || [];
-  publishQueue(fs$i, queue);
+  publishQueue(fs$h, queue);
 
   // Patch fs.close/closeSync to shared queue version, because we need
   // to retry() whenever a close happens *anywhere* in the program.
   // This is essential when multiple graceful-fs instances are
   // in play at the same time.
-  fs$i.close = (function (fs$close) {
+  fs$h.close = (function (fs$close) {
     function close (fd, cb) {
-      return fs$close.call(fs$i, fd, function (err) {
+      return fs$close.call(fs$h, fd, function (err) {
         // This function uses the graceful-fs shared queue
         if (!err) {
           retry();
@@ -638,12 +3098,12 @@ if (!fs$i[gracefulQueue]) {
       value: fs$close
     });
     return close
-  })(fs$i.close);
+  })(fs$h.close);
 
-  fs$i.closeSync = (function (fs$closeSync) {
+  fs$h.closeSync = (function (fs$closeSync) {
     function closeSync (fd) {
       // This function uses the graceful-fs shared queue
-      fs$closeSync.apply(fs$i, arguments);
+      fs$closeSync.apply(fs$h, arguments);
       retry();
     }
 
@@ -651,24 +3111,24 @@ if (!fs$i[gracefulQueue]) {
       value: fs$closeSync
     });
     return closeSync
-  })(fs$i.closeSync);
+  })(fs$h.closeSync);
 
   if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || '')) {
     process.on('exit', function() {
-      debug(fs$i[gracefulQueue]);
-      require$$5.equal(fs$i[gracefulQueue].length, 0);
+      debug(fs$h[gracefulQueue]);
+      require$$0$2.equal(fs$h[gracefulQueue].length, 0);
     });
   }
 }
 
 if (!commonjsGlobal[gracefulQueue]) {
-  publishQueue(commonjsGlobal, fs$i[gracefulQueue]);
+  publishQueue(commonjsGlobal, fs$h[gracefulQueue]);
 }
 
-var gracefulFs = patch(clone(fs$i));
-if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs$i.__patched) {
-    gracefulFs = patch(fs$i);
-    fs$i.__patched = true;
+var gracefulFs = patch(clone(fs$h));
+if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs$h.__patched) {
+    gracefulFs = patch(fs$h);
+    fs$h.__patched = true;
 }
 
 function patch (fs) {
@@ -933,11 +3393,11 @@ function patch (fs) {
 
 function enqueue (elem) {
   debug('ENQUEUE', elem[0].name, elem[1]);
-  fs$i[gracefulQueue].push(elem);
+  fs$h[gracefulQueue].push(elem);
 }
 
 function retry () {
-  var elem = fs$i[gracefulQueue].shift();
+  var elem = fs$h[gracefulQueue].shift();
   if (elem) {
     debug('RETRY', elem[0].name, elem[1]);
     elem[0].apply(null, elem[1]);
@@ -1063,17 +3523,17 @@ function retry () {
 	    })
 	  };
 	}
-} (fs$j));
+} (fs$i));
 
 var makeDir$1 = {};
 
-var utils$3 = {};
+var utils$2 = {};
 
 const path$c = require$$1;
 
 // https://github.com/nodejs/node/issues/8987
 // https://github.com/libuv/libuv/pull/1088
-utils$3.checkPath = function checkPath (pth) {
+utils$2.checkPath = function checkPath (pth) {
   if (process.platform === 'win32') {
     const pathHasInvalidWinCharacters = /[<>:"|?*]/.test(pth.replace(path$c.parse(pth).root, ''));
 
@@ -1085,8 +3545,8 @@ utils$3.checkPath = function checkPath (pth) {
   }
 };
 
-const fs$h = fs$j;
-const { checkPath } = utils$3;
+const fs$g = fs$i;
+const { checkPath } = utils$2;
 
 const getMode = options => {
   const defaults = { mode: 0o777 };
@@ -1097,7 +3557,7 @@ const getMode = options => {
 makeDir$1.makeDir = async (dir, options) => {
   checkPath(dir);
 
-  return fs$h.mkdir(dir, {
+  return fs$g.mkdir(dir, {
     mode: getMode(options),
     recursive: true
   })
@@ -1106,7 +3566,7 @@ makeDir$1.makeDir = async (dir, options) => {
 makeDir$1.makeDirSync = (dir, options) => {
   checkPath(dir);
 
-  return fs$h.mkdirSync(dir, {
+  return fs$g.mkdirSync(dir, {
     mode: getMode(options),
     recursive: true
   })
@@ -1126,14 +3586,14 @@ var mkdirs$2 = {
   ensureDirSync: makeDirSync
 };
 
-const fs$g = gracefulFs;
+const fs$f = gracefulFs;
 
 function utimesMillis$1 (path, atime, mtime, callback) {
   // if (!HAS_MILLIS_RES) return fs.utimes(path, atime, mtime, callback)
-  fs$g.open(path, 'r+', (err, fd) => {
+  fs$f.open(path, 'r+', (err, fd) => {
     if (err) return callback(err)
-    fs$g.futimes(fd, atime, mtime, futimesErr => {
-      fs$g.close(fd, closeErr => {
+    fs$f.futimes(fd, atime, mtime, futimesErr => {
+      fs$f.close(fd, closeErr => {
         if (callback) callback(futimesErr || closeErr);
       });
     });
@@ -1141,9 +3601,9 @@ function utimesMillis$1 (path, atime, mtime, callback) {
 }
 
 function utimesMillisSync$1 (path, atime, mtime) {
-  const fd = fs$g.openSync(path, 'r+');
-  fs$g.futimesSync(fd, atime, mtime);
-  return fs$g.closeSync(fd)
+  const fd = fs$f.openSync(path, 'r+');
+  fs$f.futimesSync(fd, atime, mtime);
+  return fs$f.closeSync(fd)
 }
 
 var utimes = {
@@ -1151,14 +3611,14 @@ var utimes = {
   utimesMillisSync: utimesMillisSync$1
 };
 
-const fs$f = fs$j;
+const fs$e = fs$i;
 const path$b = require$$1;
-const util$1 = require$$4;
+const util$1 = require$$2;
 
 function getStats$2 (src, dest, opts) {
   const statFunc = opts.dereference
-    ? (file) => fs$f.stat(file, { bigint: true })
-    : (file) => fs$f.lstat(file, { bigint: true });
+    ? (file) => fs$e.stat(file, { bigint: true })
+    : (file) => fs$e.lstat(file, { bigint: true });
   return Promise.all([
     statFunc(src),
     statFunc(dest).catch(err => {
@@ -1171,8 +3631,8 @@ function getStats$2 (src, dest, opts) {
 function getStatsSync (src, dest, opts) {
   let destStat;
   const statFunc = opts.dereference
-    ? (file) => fs$f.statSync(file, { bigint: true })
-    : (file) => fs$f.lstatSync(file, { bigint: true });
+    ? (file) => fs$e.statSync(file, { bigint: true })
+    : (file) => fs$e.lstatSync(file, { bigint: true });
   const srcStat = statFunc(src);
   try {
     destStat = statFunc(dest);
@@ -1250,7 +3710,7 @@ function checkParentPaths (src, srcStat, dest, funcName, cb) {
   const srcParent = path$b.resolve(path$b.dirname(src));
   const destParent = path$b.resolve(path$b.dirname(dest));
   if (destParent === srcParent || destParent === path$b.parse(destParent).root) return cb()
-  fs$f.stat(destParent, { bigint: true }, (err, destStat) => {
+  fs$e.stat(destParent, { bigint: true }, (err, destStat) => {
     if (err) {
       if (err.code === 'ENOENT') return cb()
       return cb(err)
@@ -1268,7 +3728,7 @@ function checkParentPathsSync (src, srcStat, dest, funcName) {
   if (destParent === srcParent || destParent === path$b.parse(destParent).root) return
   let destStat;
   try {
-    destStat = fs$f.statSync(destParent, { bigint: true });
+    destStat = fs$e.statSync(destParent, { bigint: true });
   } catch (err) {
     if (err.code === 'ENOENT') return
     throw err
@@ -1304,7 +3764,7 @@ var stat$4 = {
   areIdentical: areIdentical$2
 };
 
-const fs$e = gracefulFs;
+const fs$d = gracefulFs;
 const path$a = require$$1;
 const mkdirsSync$1 = mkdirs$2.mkdirsSync;
 const utimesMillisSync = utimes.utimesMillisSync;
@@ -1333,7 +3793,7 @@ function copySync$2 (src, dest, opts) {
 function handleFilterAndCopy (destStat, src, dest, opts) {
   if (opts.filter && !opts.filter(src, dest)) return
   const destParent = path$a.dirname(dest);
-  if (!fs$e.existsSync(destParent)) mkdirsSync$1(destParent);
+  if (!fs$d.existsSync(destParent)) mkdirsSync$1(destParent);
   return getStats$1(destStat, src, dest, opts)
 }
 
@@ -1343,7 +3803,7 @@ function startCopy$1 (destStat, src, dest, opts) {
 }
 
 function getStats$1 (destStat, src, dest, opts) {
-  const statSync = opts.dereference ? fs$e.statSync : fs$e.lstatSync;
+  const statSync = opts.dereference ? fs$d.statSync : fs$d.lstatSync;
   const srcStat = statSync(src);
 
   if (srcStat.isDirectory()) return onDir$1(srcStat, destStat, src, dest, opts)
@@ -1363,7 +3823,7 @@ function onFile$1 (srcStat, destStat, src, dest, opts) {
 
 function mayCopyFile$1 (srcStat, src, dest, opts) {
   if (opts.overwrite) {
-    fs$e.unlinkSync(dest);
+    fs$d.unlinkSync(dest);
     return copyFile$1(srcStat, src, dest, opts)
   } else if (opts.errorOnExist) {
     throw new Error(`'${dest}' already exists`)
@@ -1371,7 +3831,7 @@ function mayCopyFile$1 (srcStat, src, dest, opts) {
 }
 
 function copyFile$1 (srcStat, src, dest, opts) {
-  fs$e.copyFileSync(src, dest);
+  fs$d.copyFileSync(src, dest);
   if (opts.preserveTimestamps) handleTimestamps(srcStat.mode, src, dest);
   return setDestMode$1(dest, srcStat.mode)
 }
@@ -1393,14 +3853,14 @@ function makeFileWritable$1 (dest, srcMode) {
 }
 
 function setDestMode$1 (dest, srcMode) {
-  return fs$e.chmodSync(dest, srcMode)
+  return fs$d.chmodSync(dest, srcMode)
 }
 
 function setDestTimestamps$1 (src, dest) {
   // The initial srcStat.atime cannot be trusted
   // because it is modified by the read(2) system call
   // (See https://nodejs.org/api/fs.html#fs_stat_time_values)
-  const updatedSrcStat = fs$e.statSync(src);
+  const updatedSrcStat = fs$d.statSync(src);
   return utimesMillisSync(dest, updatedSrcStat.atime, updatedSrcStat.mtime)
 }
 
@@ -1410,13 +3870,13 @@ function onDir$1 (srcStat, destStat, src, dest, opts) {
 }
 
 function mkDirAndCopy$1 (srcMode, src, dest, opts) {
-  fs$e.mkdirSync(dest);
+  fs$d.mkdirSync(dest);
   copyDir$1(src, dest, opts);
   return setDestMode$1(dest, srcMode)
 }
 
 function copyDir$1 (src, dest, opts) {
-  fs$e.readdirSync(src).forEach(item => copyDirItem$1(item, src, dest, opts));
+  fs$d.readdirSync(src).forEach(item => copyDirItem$1(item, src, dest, opts));
 }
 
 function copyDirItem$1 (item, src, dest, opts) {
@@ -1427,22 +3887,22 @@ function copyDirItem$1 (item, src, dest, opts) {
 }
 
 function onLink$1 (destStat, src, dest, opts) {
-  let resolvedSrc = fs$e.readlinkSync(src);
+  let resolvedSrc = fs$d.readlinkSync(src);
   if (opts.dereference) {
     resolvedSrc = path$a.resolve(process.cwd(), resolvedSrc);
   }
 
   if (!destStat) {
-    return fs$e.symlinkSync(resolvedSrc, dest)
+    return fs$d.symlinkSync(resolvedSrc, dest)
   } else {
     let resolvedDest;
     try {
-      resolvedDest = fs$e.readlinkSync(dest);
+      resolvedDest = fs$d.readlinkSync(dest);
     } catch (err) {
       // dest exists and is a regular file or directory,
       // Windows may throw UNKNOWN error. If dest already exists,
       // fs throws error anyway, so no need to guard against it here.
-      if (err.code === 'EINVAL' || err.code === 'UNKNOWN') return fs$e.symlinkSync(resolvedSrc, dest)
+      if (err.code === 'EINVAL' || err.code === 'UNKNOWN') return fs$d.symlinkSync(resolvedSrc, dest)
       throw err
     }
     if (opts.dereference) {
@@ -1455,7 +3915,7 @@ function onLink$1 (destStat, src, dest, opts) {
     // prevent copy if src is a subdir of dest since unlinking
     // dest in this case would result in removing src contents
     // and therefore a broken symlink would be created.
-    if (fs$e.statSync(dest).isDirectory() && stat$3.isSrcSubdir(resolvedDest, resolvedSrc)) {
+    if (fs$d.statSync(dest).isDirectory() && stat$3.isSrcSubdir(resolvedDest, resolvedSrc)) {
       throw new Error(`Cannot overwrite '${resolvedDest}' with '${resolvedSrc}'.`)
     }
     return copyLink$1(resolvedSrc, dest)
@@ -1463,8 +3923,8 @@ function onLink$1 (destStat, src, dest, opts) {
 }
 
 function copyLink$1 (resolvedSrc, dest) {
-  fs$e.unlinkSync(dest);
-  return fs$e.symlinkSync(resolvedSrc, dest)
+  fs$d.unlinkSync(dest);
+  return fs$d.symlinkSync(resolvedSrc, dest)
 }
 
 var copySync_1 = copySync$2;
@@ -1474,18 +3934,18 @@ var copySync$1 = {
 };
 
 const u$9 = universalify$1.fromPromise;
-const fs$d = fs$j;
+const fs$c = fs$i;
 
 function pathExists$6 (path) {
-  return fs$d.access(path).then(() => true).catch(() => false)
+  return fs$c.access(path).then(() => true).catch(() => false)
 }
 
 var pathExists_1 = {
   pathExists: u$9(pathExists$6),
-  pathExistsSync: fs$d.existsSync
+  pathExistsSync: fs$c.existsSync
 };
 
-const fs$c = gracefulFs;
+const fs$b = gracefulFs;
 const path$9 = require$$1;
 const mkdirs$1 = mkdirs$2.mkdirs;
 const pathExists$5 = pathExists_1.pathExists;
@@ -1548,7 +4008,7 @@ function startCopy (destStat, src, dest, opts, cb) {
 }
 
 function getStats (destStat, src, dest, opts, cb) {
-  const stat = opts.dereference ? fs$c.stat : fs$c.lstat;
+  const stat = opts.dereference ? fs$b.stat : fs$b.lstat;
   stat(src, (err, srcStat) => {
     if (err) return cb(err)
 
@@ -1570,7 +4030,7 @@ function onFile (srcStat, destStat, src, dest, opts, cb) {
 
 function mayCopyFile (srcStat, src, dest, opts, cb) {
   if (opts.overwrite) {
-    fs$c.unlink(dest, err => {
+    fs$b.unlink(dest, err => {
       if (err) return cb(err)
       return copyFile(srcStat, src, dest, opts, cb)
     });
@@ -1580,7 +4040,7 @@ function mayCopyFile (srcStat, src, dest, opts, cb) {
 }
 
 function copyFile (srcStat, src, dest, opts, cb) {
-  fs$c.copyFile(src, dest, err => {
+  fs$b.copyFile(src, dest, err => {
     if (err) return cb(err)
     if (opts.preserveTimestamps) return handleTimestampsAndMode(srcStat.mode, src, dest, cb)
     return setDestMode(dest, srcStat.mode, cb)
@@ -1616,14 +4076,14 @@ function setDestTimestampsAndMode (srcMode, src, dest, cb) {
 }
 
 function setDestMode (dest, srcMode, cb) {
-  return fs$c.chmod(dest, srcMode, cb)
+  return fs$b.chmod(dest, srcMode, cb)
 }
 
 function setDestTimestamps (src, dest, cb) {
   // The initial srcStat.atime cannot be trusted
   // because it is modified by the read(2) system call
   // (See https://nodejs.org/api/fs.html#fs_stat_time_values)
-  fs$c.stat(src, (err, updatedSrcStat) => {
+  fs$b.stat(src, (err, updatedSrcStat) => {
     if (err) return cb(err)
     return utimesMillis(dest, updatedSrcStat.atime, updatedSrcStat.mtime, cb)
   });
@@ -1635,7 +4095,7 @@ function onDir (srcStat, destStat, src, dest, opts, cb) {
 }
 
 function mkDirAndCopy (srcMode, src, dest, opts, cb) {
-  fs$c.mkdir(dest, err => {
+  fs$b.mkdir(dest, err => {
     if (err) return cb(err)
     copyDir(src, dest, opts, err => {
       if (err) return cb(err)
@@ -1645,7 +4105,7 @@ function mkDirAndCopy (srcMode, src, dest, opts, cb) {
 }
 
 function copyDir (src, dest, opts, cb) {
-  fs$c.readdir(src, (err, items) => {
+  fs$b.readdir(src, (err, items) => {
     if (err) return cb(err)
     return copyDirItems(items, src, dest, opts, cb)
   });
@@ -1671,21 +4131,21 @@ function copyDirItem (items, item, src, dest, opts, cb) {
 }
 
 function onLink (destStat, src, dest, opts, cb) {
-  fs$c.readlink(src, (err, resolvedSrc) => {
+  fs$b.readlink(src, (err, resolvedSrc) => {
     if (err) return cb(err)
     if (opts.dereference) {
       resolvedSrc = path$9.resolve(process.cwd(), resolvedSrc);
     }
 
     if (!destStat) {
-      return fs$c.symlink(resolvedSrc, dest, cb)
+      return fs$b.symlink(resolvedSrc, dest, cb)
     } else {
-      fs$c.readlink(dest, (err, resolvedDest) => {
+      fs$b.readlink(dest, (err, resolvedDest) => {
         if (err) {
           // dest exists and is a regular file or directory,
           // Windows may throw UNKNOWN error. If dest already exists,
           // fs throws error anyway, so no need to guard against it here.
-          if (err.code === 'EINVAL' || err.code === 'UNKNOWN') return fs$c.symlink(resolvedSrc, dest, cb)
+          if (err.code === 'EINVAL' || err.code === 'UNKNOWN') return fs$b.symlink(resolvedSrc, dest, cb)
           return cb(err)
         }
         if (opts.dereference) {
@@ -1708,9 +4168,9 @@ function onLink (destStat, src, dest, opts, cb) {
 }
 
 function copyLink (resolvedSrc, dest, cb) {
-  fs$c.unlink(dest, err => {
+  fs$b.unlink(dest, err => {
     if (err) return cb(err)
-    return fs$c.symlink(resolvedSrc, dest, cb)
+    return fs$b.symlink(resolvedSrc, dest, cb)
   });
 }
 
@@ -1721,9 +4181,9 @@ var copy$1 = {
   copy: u$8(copy_1)
 };
 
-const fs$b = gracefulFs;
+const fs$a = gracefulFs;
 const path$8 = require$$1;
-const assert = require$$5;
+const assert = require$$0$2;
 
 const isWindows = (process.platform === 'win32');
 
@@ -1737,9 +4197,9 @@ function defaults (options) {
     'readdir'
   ];
   methods.forEach(m => {
-    options[m] = options[m] || fs$b[m];
+    options[m] = options[m] || fs$a[m];
     m = m + 'Sync';
-    options[m] = options[m] || fs$b[m];
+    options[m] = options[m] || fs$a[m];
   });
 
   options.maxBusyTries = options.maxBusyTries || 3;
@@ -2022,19 +4482,19 @@ function rmkidsSync (p, options) {
 var rimraf_1 = rimraf$1;
 rimraf$1.sync = rimrafSync;
 
-const fs$a = gracefulFs;
+const fs$9 = gracefulFs;
 const u$7 = universalify$1.fromCallback;
 const rimraf = rimraf_1;
 
 function remove$2 (path, callback) {
   // Node 14.14.0+
-  if (fs$a.rm) return fs$a.rm(path, { recursive: true, force: true }, callback)
+  if (fs$9.rm) return fs$9.rm(path, { recursive: true, force: true }, callback)
   rimraf(path, callback);
 }
 
 function removeSync$1 (path) {
   // Node 14.14.0+
-  if (fs$a.rmSync) return fs$a.rmSync(path, { recursive: true, force: true })
+  if (fs$9.rmSync) return fs$9.rmSync(path, { recursive: true, force: true })
   rimraf.sync(path);
 }
 
@@ -2044,7 +4504,7 @@ var remove_1 = {
 };
 
 const u$6 = universalify$1.fromPromise;
-const fs$9 = fs$j;
+const fs$8 = fs$i;
 const path$7 = require$$1;
 const mkdir$3 = mkdirs$2;
 const remove$1 = remove_1;
@@ -2052,7 +4512,7 @@ const remove$1 = remove_1;
 const emptyDir = u$6(async function emptyDir (dir) {
   let items;
   try {
-    items = await fs$9.readdir(dir);
+    items = await fs$8.readdir(dir);
   } catch {
     return mkdir$3.mkdirs(dir)
   }
@@ -2063,7 +4523,7 @@ const emptyDir = u$6(async function emptyDir (dir) {
 function emptyDirSync (dir) {
   let items;
   try {
-    items = fs$9.readdirSync(dir);
+    items = fs$8.readdirSync(dir);
   } catch {
     return mkdir$3.mkdirsSync(dir)
   }
@@ -2083,21 +4543,21 @@ var empty = {
 
 const u$5 = universalify$1.fromCallback;
 const path$6 = require$$1;
-const fs$8 = gracefulFs;
+const fs$7 = gracefulFs;
 const mkdir$2 = mkdirs$2;
 
 function createFile (file, callback) {
   function makeFile () {
-    fs$8.writeFile(file, '', err => {
+    fs$7.writeFile(file, '', err => {
       if (err) return callback(err)
       callback();
     });
   }
 
-  fs$8.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
+  fs$7.stat(file, (err, stats) => { // eslint-disable-line handle-callback-err
     if (!err && stats.isFile()) return callback()
     const dir = path$6.dirname(file);
-    fs$8.stat(dir, (err, stats) => {
+    fs$7.stat(dir, (err, stats) => {
       if (err) {
         // if the directory doesn't exist, make it
         if (err.code === 'ENOENT') {
@@ -2113,7 +4573,7 @@ function createFile (file, callback) {
       else {
         // parent is not a directory
         // This is just to cause an internal ENOTDIR error to be thrown
-        fs$8.readdir(dir, err => {
+        fs$7.readdir(dir, err => {
           if (err) return callback(err)
         });
       }
@@ -2124,16 +4584,16 @@ function createFile (file, callback) {
 function createFileSync (file) {
   let stats;
   try {
-    stats = fs$8.statSync(file);
+    stats = fs$7.statSync(file);
   } catch {}
   if (stats && stats.isFile()) return
 
   const dir = path$6.dirname(file);
   try {
-    if (!fs$8.statSync(dir).isDirectory()) {
+    if (!fs$7.statSync(dir).isDirectory()) {
       // parent is not a directory
       // This is just to cause an internal ENOTDIR error to be thrown
-      fs$8.readdirSync(dir);
+      fs$7.readdirSync(dir);
     }
   } catch (err) {
     // If the stat call above failed because the directory doesn't exist, create it
@@ -2141,7 +4601,7 @@ function createFileSync (file) {
     else throw err
   }
 
-  fs$8.writeFileSync(file, '');
+  fs$7.writeFileSync(file, '');
 }
 
 var file$1 = {
@@ -2151,21 +4611,21 @@ var file$1 = {
 
 const u$4 = universalify$1.fromCallback;
 const path$5 = require$$1;
-const fs$7 = gracefulFs;
+const fs$6 = gracefulFs;
 const mkdir$1 = mkdirs$2;
 const pathExists$4 = pathExists_1.pathExists;
 const { areIdentical: areIdentical$1 } = stat$4;
 
 function createLink (srcpath, dstpath, callback) {
   function makeLink (srcpath, dstpath) {
-    fs$7.link(srcpath, dstpath, err => {
+    fs$6.link(srcpath, dstpath, err => {
       if (err) return callback(err)
       callback(null);
     });
   }
 
-  fs$7.lstat(dstpath, (_, dstStat) => {
-    fs$7.lstat(srcpath, (err, srcStat) => {
+  fs$6.lstat(dstpath, (_, dstStat) => {
+    fs$6.lstat(srcpath, (err, srcStat) => {
       if (err) {
         err.message = err.message.replace('lstat', 'ensureLink');
         return callback(err)
@@ -2188,11 +4648,11 @@ function createLink (srcpath, dstpath, callback) {
 function createLinkSync (srcpath, dstpath) {
   let dstStat;
   try {
-    dstStat = fs$7.lstatSync(dstpath);
+    dstStat = fs$6.lstatSync(dstpath);
   } catch {}
 
   try {
-    const srcStat = fs$7.lstatSync(srcpath);
+    const srcStat = fs$6.lstatSync(srcpath);
     if (dstStat && areIdentical$1(srcStat, dstStat)) return
   } catch (err) {
     err.message = err.message.replace('lstat', 'ensureLink');
@@ -2200,11 +4660,11 @@ function createLinkSync (srcpath, dstpath) {
   }
 
   const dir = path$5.dirname(dstpath);
-  const dirExists = fs$7.existsSync(dir);
-  if (dirExists) return fs$7.linkSync(srcpath, dstpath)
+  const dirExists = fs$6.existsSync(dir);
+  if (dirExists) return fs$6.linkSync(srcpath, dstpath)
   mkdir$1.mkdirsSync(dir);
 
-  return fs$7.linkSync(srcpath, dstpath)
+  return fs$6.linkSync(srcpath, dstpath)
 }
 
 var link$1 = {
@@ -2213,7 +4673,7 @@ var link$1 = {
 };
 
 const path$4 = require$$1;
-const fs$6 = gracefulFs;
+const fs$5 = gracefulFs;
 const pathExists$3 = pathExists_1.pathExists;
 
 /**
@@ -2240,7 +4700,7 @@ const pathExists$3 = pathExists_1.pathExists;
 
 function symlinkPaths$1 (srcpath, dstpath, callback) {
   if (path$4.isAbsolute(srcpath)) {
-    return fs$6.lstat(srcpath, (err) => {
+    return fs$5.lstat(srcpath, (err) => {
       if (err) {
         err.message = err.message.replace('lstat', 'ensureSymlink');
         return callback(err)
@@ -2261,7 +4721,7 @@ function symlinkPaths$1 (srcpath, dstpath, callback) {
           toDst: srcpath
         })
       } else {
-        return fs$6.lstat(srcpath, (err) => {
+        return fs$5.lstat(srcpath, (err) => {
           if (err) {
             err.message = err.message.replace('lstat', 'ensureSymlink');
             return callback(err)
@@ -2279,7 +4739,7 @@ function symlinkPaths$1 (srcpath, dstpath, callback) {
 function symlinkPathsSync$1 (srcpath, dstpath) {
   let exists;
   if (path$4.isAbsolute(srcpath)) {
-    exists = fs$6.existsSync(srcpath);
+    exists = fs$5.existsSync(srcpath);
     if (!exists) throw new Error('absolute srcpath does not exist')
     return {
       toCwd: srcpath,
@@ -2288,14 +4748,14 @@ function symlinkPathsSync$1 (srcpath, dstpath) {
   } else {
     const dstdir = path$4.dirname(dstpath);
     const relativeToDst = path$4.join(dstdir, srcpath);
-    exists = fs$6.existsSync(relativeToDst);
+    exists = fs$5.existsSync(relativeToDst);
     if (exists) {
       return {
         toCwd: relativeToDst,
         toDst: srcpath
       }
     } else {
-      exists = fs$6.existsSync(srcpath);
+      exists = fs$5.existsSync(srcpath);
       if (!exists) throw new Error('relative srcpath does not exist')
       return {
         toCwd: srcpath,
@@ -2310,13 +4770,13 @@ var symlinkPaths_1 = {
   symlinkPathsSync: symlinkPathsSync$1
 };
 
-const fs$5 = gracefulFs;
+const fs$4 = gracefulFs;
 
 function symlinkType$1 (srcpath, type, callback) {
   callback = (typeof type === 'function') ? type : callback;
   type = (typeof type === 'function') ? false : type;
   if (type) return callback(null, type)
-  fs$5.lstat(srcpath, (err, stats) => {
+  fs$4.lstat(srcpath, (err, stats) => {
     if (err) return callback(null, 'file')
     type = (stats && stats.isDirectory()) ? 'dir' : 'file';
     callback(null, type);
@@ -2328,7 +4788,7 @@ function symlinkTypeSync$1 (srcpath, type) {
 
   if (type) return type
   try {
-    stats = fs$5.lstatSync(srcpath);
+    stats = fs$4.lstatSync(srcpath);
   } catch {
     return 'file'
   }
@@ -2342,7 +4802,7 @@ var symlinkType_1 = {
 
 const u$3 = universalify$1.fromCallback;
 const path$3 = require$$1;
-const fs$4 = fs$j;
+const fs$3 = fs$i;
 const _mkdirs = mkdirs$2;
 const mkdirs = _mkdirs.mkdirs;
 const mkdirsSync = _mkdirs.mkdirsSync;
@@ -2363,11 +4823,11 @@ function createSymlink (srcpath, dstpath, type, callback) {
   callback = (typeof type === 'function') ? type : callback;
   type = (typeof type === 'function') ? false : type;
 
-  fs$4.lstat(dstpath, (err, stats) => {
+  fs$3.lstat(dstpath, (err, stats) => {
     if (!err && stats.isSymbolicLink()) {
       Promise.all([
-        fs$4.stat(srcpath),
-        fs$4.stat(dstpath)
+        fs$3.stat(srcpath),
+        fs$3.stat(dstpath)
       ]).then(([srcStat, dstStat]) => {
         if (areIdentical(srcStat, dstStat)) return callback(null)
         _createSymlink(srcpath, dstpath, type, callback);
@@ -2385,10 +4845,10 @@ function _createSymlink (srcpath, dstpath, type, callback) {
       const dir = path$3.dirname(dstpath);
       pathExists$2(dir, (err, dirExists) => {
         if (err) return callback(err)
-        if (dirExists) return fs$4.symlink(srcpath, dstpath, type, callback)
+        if (dirExists) return fs$3.symlink(srcpath, dstpath, type, callback)
         mkdirs(dir, err => {
           if (err) return callback(err)
-          fs$4.symlink(srcpath, dstpath, type, callback);
+          fs$3.symlink(srcpath, dstpath, type, callback);
         });
       });
     });
@@ -2398,11 +4858,11 @@ function _createSymlink (srcpath, dstpath, type, callback) {
 function createSymlinkSync (srcpath, dstpath, type) {
   let stats;
   try {
-    stats = fs$4.lstatSync(dstpath);
+    stats = fs$3.lstatSync(dstpath);
   } catch {}
   if (stats && stats.isSymbolicLink()) {
-    const srcStat = fs$4.statSync(srcpath);
-    const dstStat = fs$4.statSync(dstpath);
+    const srcStat = fs$3.statSync(srcpath);
+    const dstStat = fs$3.statSync(dstpath);
     if (areIdentical(srcStat, dstStat)) return
   }
 
@@ -2410,10 +4870,10 @@ function createSymlinkSync (srcpath, dstpath, type) {
   srcpath = relative.toDst;
   type = symlinkTypeSync(relative.toCwd, type);
   const dir = path$3.dirname(dstpath);
-  const exists = fs$4.existsSync(dir);
-  if (exists) return fs$4.symlinkSync(srcpath, dstpath, type)
+  const exists = fs$3.existsSync(dir);
+  if (exists) return fs$3.symlinkSync(srcpath, dstpath, type)
   mkdirsSync(dir);
-  return fs$4.symlinkSync(srcpath, dstpath, type)
+  return fs$3.symlinkSync(srcpath, dstpath, type)
 }
 
 var symlink$1 = {
@@ -2456,16 +4916,16 @@ function stripBom$1 (content) {
   return content.replace(/^\uFEFF/, '')
 }
 
-var utils$2 = { stringify: stringify$3, stripBom: stripBom$1 };
+var utils$1 = { stringify: stringify$3, stripBom: stripBom$1 };
 
 let _fs;
 try {
   _fs = gracefulFs;
 } catch (_) {
-  _fs = require$$0$2;
+  _fs = require$$0$1;
 }
 const universalify = universalify$1;
-const { stringify: stringify$2, stripBom } = utils$2;
+const { stringify: stringify$2, stripBom } = utils$1;
 
 async function _readFile (file, options = {}) {
   if (typeof options === 'string') {
@@ -2558,7 +5018,7 @@ var jsonfile = {
 };
 
 const u$2 = universalify$1.fromCallback;
-const fs$3 = gracefulFs;
+const fs$2 = gracefulFs;
 const path$2 = require$$1;
 const mkdir = mkdirs$2;
 const pathExists$1 = pathExists_1.pathExists;
@@ -2572,23 +5032,23 @@ function outputFile$1 (file, data, encoding, callback) {
   const dir = path$2.dirname(file);
   pathExists$1(dir, (err, itDoes) => {
     if (err) return callback(err)
-    if (itDoes) return fs$3.writeFile(file, data, encoding, callback)
+    if (itDoes) return fs$2.writeFile(file, data, encoding, callback)
 
     mkdir.mkdirs(dir, err => {
       if (err) return callback(err)
 
-      fs$3.writeFile(file, data, encoding, callback);
+      fs$2.writeFile(file, data, encoding, callback);
     });
   });
 }
 
 function outputFileSync$1 (file, ...args) {
   const dir = path$2.dirname(file);
-  if (fs$3.existsSync(dir)) {
-    return fs$3.writeFileSync(file, ...args)
+  if (fs$2.existsSync(dir)) {
+    return fs$2.writeFileSync(file, ...args)
   }
   mkdir.mkdirsSync(dir);
-  fs$3.writeFileSync(file, ...args);
+  fs$2.writeFileSync(file, ...args);
 }
 
 var output = {
@@ -2596,7 +5056,7 @@ var output = {
   outputFileSync: outputFileSync$1
 };
 
-const { stringify: stringify$1 } = utils$2;
+const { stringify: stringify$1 } = utils$1;
 const { outputFile } = output;
 
 async function outputJson (file, data, options = {}) {
@@ -2607,7 +5067,7 @@ async function outputJson (file, data, options = {}) {
 
 var outputJson_1 = outputJson;
 
-const { stringify } = utils$2;
+const { stringify } = utils$1;
 const { outputFileSync } = output;
 
 function outputJsonSync (file, data, options) {
@@ -2633,7 +5093,7 @@ jsonFile.readJSONSync = jsonFile.readJsonSync;
 
 var json = jsonFile;
 
-const fs$2 = gracefulFs;
+const fs$1 = gracefulFs;
 const path$1 = require$$1;
 const copySync = copySync$1.copySync;
 const removeSync = remove_1.removeSync;
@@ -2662,13 +5122,13 @@ function doRename$1 (src, dest, overwrite, isChangingCase) {
     removeSync(dest);
     return rename$1(src, dest, overwrite)
   }
-  if (fs$2.existsSync(dest)) throw new Error('dest already exists.')
+  if (fs$1.existsSync(dest)) throw new Error('dest already exists.')
   return rename$1(src, dest, overwrite)
 }
 
 function rename$1 (src, dest, overwrite) {
   try {
-    fs$2.renameSync(src, dest);
+    fs$1.renameSync(src, dest);
   } catch (err) {
     if (err.code !== 'EXDEV') throw err
     return moveAcrossDevice$1(src, dest, overwrite)
@@ -2690,7 +5150,7 @@ var moveSync = {
   moveSync: moveSync_1
 };
 
-const fs$1 = gracefulFs;
+const fs = gracefulFs;
 const path = require$$1;
 const copy = copy$1.copy;
 const remove = remove_1.remove;
@@ -2742,7 +5202,7 @@ function doRename (src, dest, overwrite, isChangingCase, cb) {
 }
 
 function rename (src, dest, overwrite, cb) {
-  fs$1.rename(src, dest, err => {
+  fs.rename(src, dest, err => {
     if (!err) return cb()
     if (err.code !== 'EXDEV') return cb(err)
     return moveAcrossDevice(src, dest, overwrite, cb)
@@ -2769,7 +5229,7 @@ var move = {
 
 var lib$1 = {
   // Export promiseified graceful-fs:
-  ...fs$j,
+  ...fs$i,
   // Export extra methods:
   ...copySync$1,
   ...copy$1,
@@ -2782,409 +5242,6 @@ var lib$1 = {
   ...output,
   ...pathExists_1,
   ...remove_1
-};
-
-var core = {};
-
-var command = {};
-
-var utils$1 = {};
-
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-Object.defineProperty(utils$1, "__esModule", { value: true });
-/**
- * Sanitizes an input into a string so it can be passed into issueCommand safely
- * @param input input to sanitize into a string
- */
-function toCommandValue(input) {
-    if (input === null || input === undefined) {
-        return '';
-    }
-    else if (typeof input === 'string' || input instanceof String) {
-        return input;
-    }
-    return JSON.stringify(input);
-}
-utils$1.toCommandValue = toCommandValue;
-
-var __importStar$1 = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(command, "__esModule", { value: true });
-const os$1 = __importStar$1(require$$0$3);
-const utils_1$1 = utils$1;
-/**
- * Commands
- *
- * Command Format:
- *   ::name key=value,key=value::message
- *
- * Examples:
- *   ::warning::This is the message
- *   ::set-env name=MY_VAR::some value
- */
-function issueCommand$1(command, properties, message) {
-    const cmd = new Command(command, properties, message);
-    process.stdout.write(cmd.toString() + os$1.EOL);
-}
-command.issueCommand = issueCommand$1;
-function issue(name, message = '') {
-    issueCommand$1(name, {}, message);
-}
-command.issue = issue;
-const CMD_STRING = '::';
-class Command {
-    constructor(command, properties, message) {
-        if (!command) {
-            command = 'missing.command';
-        }
-        this.command = command;
-        this.properties = properties;
-        this.message = message;
-    }
-    toString() {
-        let cmdStr = CMD_STRING + this.command;
-        if (this.properties && Object.keys(this.properties).length > 0) {
-            cmdStr += ' ';
-            let first = true;
-            for (const key in this.properties) {
-                if (this.properties.hasOwnProperty(key)) {
-                    const val = this.properties[key];
-                    if (val) {
-                        if (first) {
-                            first = false;
-                        }
-                        else {
-                            cmdStr += ',';
-                        }
-                        cmdStr += `${key}=${escapeProperty(val)}`;
-                    }
-                }
-            }
-        }
-        cmdStr += `${CMD_STRING}${escapeData(this.message)}`;
-        return cmdStr;
-    }
-}
-function escapeData(s) {
-    return utils_1$1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A');
-}
-function escapeProperty(s) {
-    return utils_1$1.toCommandValue(s)
-        .replace(/%/g, '%25')
-        .replace(/\r/g, '%0D')
-        .replace(/\n/g, '%0A')
-        .replace(/:/g, '%3A')
-        .replace(/,/g, '%2C');
-}
-
-var fileCommand = {};
-
-// For internal use, subject to change.
-var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-    result["default"] = mod;
-    return result;
-};
-Object.defineProperty(fileCommand, "__esModule", { value: true });
-// We use any as a valid input type
-/* eslint-disable @typescript-eslint/no-explicit-any */
-const fs = __importStar(require$$0$2);
-const os = __importStar(require$$0$3);
-const utils_1 = utils$1;
-function issueCommand(command, message) {
-    const filePath = process.env[`GITHUB_${command}`];
-    if (!filePath) {
-        throw new Error(`Unable to find environment variable for file command ${command}`);
-    }
-    if (!fs.existsSync(filePath)) {
-        throw new Error(`Missing file at path: ${filePath}`);
-    }
-    fs.appendFileSync(filePath, `${utils_1.toCommandValue(message)}${os.EOL}`, {
-        encoding: 'utf8'
-    });
-}
-fileCommand.issueCommand = issueCommand;
-
-(function (exports) {
-	var __awaiter = (commonjsGlobal && commonjsGlobal.__awaiter) || function (thisArg, _arguments, P, generator) {
-	    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-	    return new (P || (P = Promise))(function (resolve, reject) {
-	        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-	        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-	        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-	        step((generator = generator.apply(thisArg, _arguments || [])).next());
-	    });
-	};
-	var __importStar = (commonjsGlobal && commonjsGlobal.__importStar) || function (mod) {
-	    if (mod && mod.__esModule) return mod;
-	    var result = {};
-	    if (mod != null) for (var k in mod) if (Object.hasOwnProperty.call(mod, k)) result[k] = mod[k];
-	    result["default"] = mod;
-	    return result;
-	};
-	Object.defineProperty(exports, "__esModule", { value: true });
-	const command_1 = command;
-	const file_command_1 = fileCommand;
-	const utils_1 = utils$1;
-	const os = __importStar(require$$0$3);
-	const path = __importStar(require$$1);
-	/**
-	 * The code to exit an action
-	 */
-	var ExitCode;
-	(function (ExitCode) {
-	    /**
-	     * A code indicating that the action was successful
-	     */
-	    ExitCode[ExitCode["Success"] = 0] = "Success";
-	    /**
-	     * A code indicating that the action was a failure
-	     */
-	    ExitCode[ExitCode["Failure"] = 1] = "Failure";
-	})(ExitCode = exports.ExitCode || (exports.ExitCode = {}));
-	//-----------------------------------------------------------------------
-	// Variables
-	//-----------------------------------------------------------------------
-	/**
-	 * Sets env variable for this action and future actions in the job
-	 * @param name the name of the variable to set
-	 * @param val the value of the variable. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function exportVariable(name, val) {
-	    const convertedVal = utils_1.toCommandValue(val);
-	    process.env[name] = convertedVal;
-	    const filePath = process.env['GITHUB_ENV'] || '';
-	    if (filePath) {
-	        const delimiter = '_GitHubActionsFileCommandDelimeter_';
-	        const commandValue = `${name}<<${delimiter}${os.EOL}${convertedVal}${os.EOL}${delimiter}`;
-	        file_command_1.issueCommand('ENV', commandValue);
-	    }
-	    else {
-	        command_1.issueCommand('set-env', { name }, convertedVal);
-	    }
-	}
-	exports.exportVariable = exportVariable;
-	/**
-	 * Registers a secret which will get masked from logs
-	 * @param secret value of the secret
-	 */
-	function setSecret(secret) {
-	    command_1.issueCommand('add-mask', {}, secret);
-	}
-	exports.setSecret = setSecret;
-	/**
-	 * Prepends inputPath to the PATH (for this action and future actions)
-	 * @param inputPath
-	 */
-	function addPath(inputPath) {
-	    const filePath = process.env['GITHUB_PATH'] || '';
-	    if (filePath) {
-	        file_command_1.issueCommand('PATH', inputPath);
-	    }
-	    else {
-	        command_1.issueCommand('add-path', {}, inputPath);
-	    }
-	    process.env['PATH'] = `${inputPath}${path.delimiter}${process.env['PATH']}`;
-	}
-	exports.addPath = addPath;
-	/**
-	 * Gets the value of an input.  The value is also trimmed.
-	 *
-	 * @param     name     name of the input to get
-	 * @param     options  optional. See InputOptions.
-	 * @returns   string
-	 */
-	function getInput(name, options) {
-	    const val = process.env[`INPUT_${name.replace(/ /g, '_').toUpperCase()}`] || '';
-	    if (options && options.required && !val) {
-	        throw new Error(`Input required and not supplied: ${name}`);
-	    }
-	    return val.trim();
-	}
-	exports.getInput = getInput;
-	/**
-	 * Sets the value of an output.
-	 *
-	 * @param     name     name of the output to set
-	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function setOutput(name, value) {
-	    process.stdout.write(os.EOL);
-	    command_1.issueCommand('set-output', { name }, value);
-	}
-	exports.setOutput = setOutput;
-	/**
-	 * Enables or disables the echoing of commands into stdout for the rest of the step.
-	 * Echoing is disabled by default if ACTIONS_STEP_DEBUG is not set.
-	 *
-	 */
-	function setCommandEcho(enabled) {
-	    command_1.issue('echo', enabled ? 'on' : 'off');
-	}
-	exports.setCommandEcho = setCommandEcho;
-	//-----------------------------------------------------------------------
-	// Results
-	//-----------------------------------------------------------------------
-	/**
-	 * Sets the action status to failed.
-	 * When the action exits it will be with an exit code of 1
-	 * @param message add error issue message
-	 */
-	function setFailed(message) {
-	    process.exitCode = ExitCode.Failure;
-	    error(message);
-	}
-	exports.setFailed = setFailed;
-	//-----------------------------------------------------------------------
-	// Logging Commands
-	//-----------------------------------------------------------------------
-	/**
-	 * Gets whether Actions Step Debug is on or not
-	 */
-	function isDebug() {
-	    return process.env['RUNNER_DEBUG'] === '1';
-	}
-	exports.isDebug = isDebug;
-	/**
-	 * Writes debug message to user log
-	 * @param message debug message
-	 */
-	function debug(message) {
-	    command_1.issueCommand('debug', {}, message);
-	}
-	exports.debug = debug;
-	/**
-	 * Adds an error issue
-	 * @param message error issue message. Errors will be converted to string via toString()
-	 */
-	function error(message) {
-	    command_1.issue('error', message instanceof Error ? message.toString() : message);
-	}
-	exports.error = error;
-	/**
-	 * Adds an warning issue
-	 * @param message warning issue message. Errors will be converted to string via toString()
-	 */
-	function warning(message) {
-	    command_1.issue('warning', message instanceof Error ? message.toString() : message);
-	}
-	exports.warning = warning;
-	/**
-	 * Writes info to log with console.log.
-	 * @param message info message
-	 */
-	function info(message) {
-	    process.stdout.write(message + os.EOL);
-	}
-	exports.info = info;
-	/**
-	 * Begin an output group.
-	 *
-	 * Output until the next `groupEnd` will be foldable in this group
-	 *
-	 * @param name The name of the output group
-	 */
-	function startGroup(name) {
-	    command_1.issue('group', name);
-	}
-	exports.startGroup = startGroup;
-	/**
-	 * End an output group.
-	 */
-	function endGroup() {
-	    command_1.issue('endgroup');
-	}
-	exports.endGroup = endGroup;
-	/**
-	 * Wrap an asynchronous function call in a group.
-	 *
-	 * Returns the same type as the function itself.
-	 *
-	 * @param name The name of the group
-	 * @param fn The function to wrap in the group
-	 */
-	function group(name, fn) {
-	    return __awaiter(this, void 0, void 0, function* () {
-	        startGroup(name);
-	        let result;
-	        try {
-	            result = yield fn();
-	        }
-	        finally {
-	            endGroup();
-	        }
-	        return result;
-	    });
-	}
-	exports.group = group;
-	//-----------------------------------------------------------------------
-	// Wrapper action state
-	//-----------------------------------------------------------------------
-	/**
-	 * Saves state for current action, the state can only be retrieved by this action's post job execution.
-	 *
-	 * @param     name     name of the state to store
-	 * @param     value    value to store. Non-string values will be converted to a string via JSON.stringify
-	 */
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
-	function saveState(name, value) {
-	    command_1.issueCommand('save-state', { name }, value);
-	}
-	exports.saveState = saveState;
-	/**
-	 * Gets the value of an state set by this action's main execution.
-	 *
-	 * @param     name     name of the state to get
-	 * @returns   string
-	 */
-	function getState(name) {
-	    return process.env[`STATE_${name}`] || '';
-	}
-	exports.getState = getState;
-	
-} (core));
-
-const log$2 = {
-    error: core.error,
-    info: core.info,
-    warning: core.warning,
-    debug: core.debug,
-};
-
-const get_cmd = (ctx) => (cmd, args) => {
-    try {
-        if (ctx.enable_debug) {
-            log$2.debug(`Running: ${cmd}`);
-        }
-        const process = child_process.spawnSync(cmd, args, {
-            stdio: ctx.enable_debug ? "inherit" : "ignore",
-            shell: true,
-        });
-        if (process.status != 0) {
-            const out = process.output.toString() + process.stderr.toString();
-            log$2.debug(out);
-            throw new Error(`Bad Exit ${process.status}`);
-        }
-    }
-    catch (error) {
-        const params = args ? args.join(" ") : "";
-        const failure = `Running command: ${cmd} ${params}`;
-        // setFailed(failure);
-        throw new Error(failure);
-    }
 };
 
 function commonjsRequire(path) {
@@ -11353,7 +13410,7 @@ var lib = handlebars;
 
 // Publish a Node.js require() handler for .handlebars and .hbs files
 function extension(module, filename) {
-  var fs = require$$0$2;
+  var fs = require$$0$1;
   var templateString = fs.readFileSync(filename, 'utf8');
   module.exports = handlebars.compile(templateString);
 }
@@ -11374,7 +13431,7 @@ const dockerfile = lib$1.readFileSync(`${templates_dir}/Dockerfile.hbs`)
     .toString();
 const docker_template = lib.compile(dockerfile);
 const WORKSPACE_DIR = process.env.GITHUB_WORKSPACE;
-const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, void 0, function* () {
+const prepare_dockerfile = (data = default_build) => __awaiter$3(void 0, void 0, void 0, function* () {
     // Compose template with data and write to path
     const composed_file_data = docker_template(data);
     console.log(composed_file_data);
@@ -11389,11 +13446,10 @@ const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, v
     return;
 });
 
-const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter(void 0, void 0, void 0, function* () {
+const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaiter$3(void 0, void 0, void 0, function* () {
     if (ctx.enable_debug) {
         log$2.debug(JSON.stringify(ctx));
     }
-    const cmd = get_cmd(ctx);
     // Prepare setup
     log$2.info("🥤 Building image...");
     yield prepare_dockerfile();
@@ -11426,7 +13482,7 @@ const get_context = () => {
 };
 
 const pkg = require(require$$1__namespace.join(__dirname, "../package.json"));
-const main = () => __awaiter(void 0, void 0, void 0, function* () {
+const main = () => __awaiter$3(void 0, void 0, void 0, function* () {
     log$2.info(`🚀 faable.com ${pkg.name} - ${pkg.version}`);
     const ctx = get_context();
     try {
@@ -11434,7 +13490,6 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (error) {
         log$2.error(error.message);
-        core.setFailed(error);
         process.exit(-1);
     }
 });
