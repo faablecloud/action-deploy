@@ -1,3 +1,4 @@
+import { setFailed } from "@actions/core";
 import { spawnSync } from "child_process";
 import { log } from "../log";
 import { FaableContext } from "./FaableContext";
@@ -20,6 +21,8 @@ export const get_cmd =
     } catch (error: any) {
       log.error(error as Error);
       const params = args ? args.join(" ") : "";
-      throw new Error(`Error running command ${cmd} with ${params}`);
+      const failure = `Error running command ${cmd} with ${params}`;
+      setFailed(failure);
+      throw new Error(failure);
     }
   };

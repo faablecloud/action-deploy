@@ -6,8 +6,8 @@ var require$$0$1 = require('stream');
 var require$$4 = require('util');
 var require$$5 = require('assert');
 var require$$1 = require('path');
-var child_process = require('child_process');
 var require$$0$3 = require('os');
+var child_process = require('child_process');
 
 function _interopNamespaceDefault(e) {
     var n = Object.create(null);
@@ -3182,7 +3182,9 @@ const get_cmd = (ctx) => (cmd, args) => {
     catch (error) {
         log$2.error(error);
         const params = args ? args.join(" ") : "";
-        throw new Error(`Error running command ${cmd} with ${params}`);
+        const failure = `Error running command ${cmd} with ${params}`;
+        core.setFailed(failure);
+        throw new Error(failure);
     }
 };
 
@@ -11429,6 +11431,7 @@ const main = () => __awaiter(void 0, void 0, void 0, function* () {
     }
     catch (error) {
         log$2.error(error.message);
+        core.setFailed(error);
         process.exit(-1);
     }
 });
