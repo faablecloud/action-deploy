@@ -29,7 +29,8 @@ export const deploy_action = async (
 
   if (options.upload) {
     // Registry login
-    await cmd("bash", [
+    await cmd("/bin/bash", [
+      "-c",
       `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`,
     ]);
     // Upload the image to faable registry

@@ -13459,7 +13459,8 @@ const deploy_action = (ctx, options = { upload: true, cache: true }) => __awaite
     log$2.info(`✅ Build ${ctx.faable_app_name} successful`);
     if (options.upload) {
         // Registry login
-        yield cmd("bash", [
+        yield cmd("/bin/bash", [
+            "-c",
             `echo "${ctx.faable_api_key}" | docker login --username faablecloud#${ctx.faable_user}+deployment --password-stdin harbor.app.faable.com`,
         ]);
         // Upload the image to faable registry
