@@ -11003,8 +11003,11 @@ const dockerfile = lib$1.readFileSync(`${templates_dir}/Dockerfile.hbs`)
 const docker_template = lib.compile(dockerfile);
 const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, void 0, function* () {
     // Compose template with data and write to path
-    const dockerfile = docker_template(data);
-    yield lib$1.writeFile(dockerfile, "./Dockerfile");
+    const composed_file_data = docker_template(data);
+    // Create Dockerfile
+    yield lib$1.writeFile("./Dockerfile", composed_file_data);
+    // Copy entrypoint file
+    yield lib$1.copyFile(require$$1__namespace.join(templates_dir, "entrypoint.sh"), "entrypoint.sh");
     return;
 });
 

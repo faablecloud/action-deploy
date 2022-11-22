@@ -25,7 +25,12 @@ export const prepare_dockerfile = async (
   data: DockerTemplate = default_build
 ) => {
   // Compose template with data and write to path
-  const dockerfile = docker_template(data);
-  await fs.writeFile(dockerfile, "./Dockerfile");
+  const composed_file_data = docker_template(data);
+
+  // Create Dockerfile
+  await fs.writeFile("./Dockerfile", composed_file_data);
+
+  // Copy entrypoint file
+  await fs.copyFile(path.join(templates_dir, "entrypoint.sh"), "entrypoint.sh");
   return;
 };
