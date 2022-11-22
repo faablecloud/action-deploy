@@ -34,7 +34,7 @@ runs:
         node-version: "16"
     - run: yarn install --frozen-lockfile
       shell: bash
-    - run: node ${{ github.action_path }}/deploy/index.js
+    - run: node ${{ github.action_path }}/dist/index.js
       shell: bash
       env:
         INPUT_FAABLE_APP_NAME: ${{ inputs.faable_app_name }}
