@@ -11378,11 +11378,13 @@ const prepare_dockerfile = (data = default_build) => __awaiter(void 0, void 0, v
     // Compose template with data and write to path
     const composed_file_data = docker_template(data);
     // Create Dockerfile
-    yield lib$1.writeFile("./Dockerfile", composed_file_data);
-    log$2.info("Created Dockerfile");
+    let out = require$$1__namespace.join(process.cwd(), "./Dockerfile");
+    yield lib$1.writeFile(out, composed_file_data);
+    log$2.info(`Created ${out}`);
     // Copy entrypoint file
-    yield lib$1.copyFile(require$$1__namespace.join(templates_dir, "entrypoint.sh"), "./entrypoint.sh");
-    log$2.info("Created entrypoint.sh");
+    let out2 = require$$1__namespace.join(process.cwd(), "./entrypoint.sh");
+    yield lib$1.copyFile(require$$1__namespace.join(templates_dir, "entrypoint.sh"), out2);
+    log$2.info(`Created ${out2}`);
     return;
 });
 

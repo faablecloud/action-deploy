@@ -29,14 +29,13 @@ export const prepare_dockerfile = async (
   const composed_file_data = docker_template(data);
 
   // Create Dockerfile
-  await fs.writeFile("./Dockerfile", composed_file_data);
-  log.info("Created Dockerfile");
+  let out = path.join(process.cwd(), "./Dockerfile");
+  await fs.writeFile(out, composed_file_data);
+  log.info(`Created ${out}`);
 
   // Copy entrypoint file
-  await fs.copyFile(
-    path.join(templates_dir, "entrypoint.sh"),
-    "./entrypoint.sh"
-  );
-  log.info("Created entrypoint.sh");
+  let out2 = path.join(process.cwd(), "./entrypoint.sh");
+  await fs.copyFile(path.join(templates_dir, "entrypoint.sh"), out2);
+  log.info(`Created ${out2}`);
   return;
 };
